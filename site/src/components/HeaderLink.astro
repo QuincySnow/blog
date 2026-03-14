@@ -12,11 +12,11 @@ const isActive =
 	href === pathname ||
 	(href === '/' && isRoot) ||
 	(href === '/blog' && (pathname === '/blog' || pathname.startsWith('/blog/'))) ||
-	(href === '/about' && pathname === '/about') ||
-	(href === '/search' && pathname === '/search');
+	(href === '/tags' && pathname === '/tags') ||
+	(href === '/about' && pathname === '/about');
 ---
 
-<a href={withBase(href)} class:list={[className, { active: isActive }]} {...props}>
+<a href={withBase(href)} class:list={[className, 'transition-colors duration-200', { active: isActive }]} {...props}>
 	<slot />
 </a>
 <style>

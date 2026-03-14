@@ -10,6 +10,12 @@ const allPosts = (await getCollection('blog'))
 	.filter((p) => !p.data.draft)
 	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 const recentPosts = allPosts.slice(0, 8);
+const searchIndex = allPosts.map((p) => ({
+	id: p.id,
+	title: p.data.title,
+	tags: p.data.tags ?? [],
+	pubDate: p.data.pubDate.toISOString(),
+}));
 ---
 
 <!doctype html>
@@ -32,7 +38,7 @@ const recentPosts = allPosts.slice(0, 8);
 				line-height: 1.7;
 			}
 			.recent-title {
-				margin: 0 0 1.5rem;
+				margin: 5.5rem 0 1.5rem;
 				font-size: 1.25rem;
 				color: rgb(var(--text-heading));
 			}
@@ -81,18 +87,18 @@ const recentPosts = allPosts.slice(0, 8);
 		</style>
 	</head>
 	<body class="home">
-		<Header />
-		<main>
-			<section class="home-intro">
+		<Header searchIndex={searchIndex} />
+		<main class="animate-fade-in">
+			<section class="home-intro animate-fade-in-delay">
 				<h1>QuincySnow</h1>
 				<p data-i18n="home.intro">技术笔记与代码分享。</p>
 			</section>
 			<h2 class="recent-title" data-i18n="home.recentTitle">最近文章</h2>
-			<ul class="home-posts">
+			<ul class="home-posts animate-stagger-children">
 				{
 					recentPosts.map((post) => (
 						<li>
-							<a href={withBase(`/blog/${post.id}/`)}>
+							<a href={withBase(`/blog/${post.id}/`)} class="transition-colors duration-200 hover-lift">
 								<span class="post-title">{post.data.title}</span>
 								<span class="post-date">
 									<FormattedDate date={post.data.pubDate} />
@@ -102,7 +108,7 @@ const recentPosts = allPosts.slice(0, 8);
 					))
 				}
 			</ul>
-			<a href={withBase('/blog/')} class="more-link" data-i18n="home.morePosts">全部文章 →</a>
+			<a href={withBase('/blog/')} class="more-link transition-colors duration-200 hover-scale" data-i18n="home.morePosts">全部文章 →</a>
 		</main>
 		<Footer />
 	</body>

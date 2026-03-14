@@ -4,7 +4,8 @@ export const i18n = {
 	en: {
 		nav: {
 			home: 'Home',
-			blog: 'Blog',
+			blog: 'Articles',
+			tags: 'Tags',
 			about: 'About',
 			search: 'Search',
 		},
@@ -32,6 +33,10 @@ export const i18n = {
 			pageDescription: 'Search posts',
 			documentTitle: 'Search - QuincySnow',
 		},
+		tags: {
+			title: 'Tags',
+			documentTitle: 'Tags - QuincySnow',
+		},
 		about: {
 			title: 'About',
 			description: 'About me',
@@ -55,7 +60,8 @@ export const i18n = {
 	zh: {
 		nav: {
 			home: '首页',
-			blog: '博客',
+			blog: '文章',
+			tags: '标签',
 			about: '关于',
 			search: '搜索',
 		},
@@ -82,6 +88,10 @@ export const i18n = {
 			pageTitle: '搜索',
 			pageDescription: '搜索文章',
 			documentTitle: '搜索 - QuincySnow',
+		},
+		tags: {
+			title: '标签',
+			documentTitle: '标签 - QuincySnow',
 		},
 		about: {
 			title: '关于',

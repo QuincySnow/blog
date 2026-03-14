@@ -11,6 +11,12 @@ const allPosts = await getCollection('blog');
 const posts = allPosts
 	.filter((p) => !p.data.draft)
 	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const searchIndex = posts.map((p) => ({
+	id: p.id,
+	title: p.data.title,
+	tags: p.data.tags ?? [],
+	pubDate: p.data.pubDate.toISOString(),
+}));
 ---
 
 <!doctype html>
@@ -76,15 +82,15 @@ const posts = allPosts
 		</style>
 	</head>
 	<body>
-		<Header />
-		<main>
+		<Header searchIndex={searchIndex} />
+		<main class="animate-fade-in">
 			<h1 class="blog-page-title" data-i18n="nav.blog">博客</h1>
 			<section aria-label="Article list">
-				<ul class="blog-list">
+				<ul class="blog-list animate-stagger-children">
 					{
 						posts.map((post) => (
 							<li>
-								<a href={withBase(`/blog/${post.id}/`)}>
+								<a href={withBase(`/blog/${post.id}/`)} class="hover-lift">
 									{post.data.heroImage && (
 										<Image width={720} height={360} src={post.data.heroImage} alt="" />
 									)}

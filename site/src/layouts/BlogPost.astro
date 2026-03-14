@@ -1,5 +1,6 @@
 ---
 import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
@@ -12,6 +13,16 @@ type Props = CollectionEntry<'blog'>['data'] & {
 };
 
 const { title, description, pubDate, updatedDate, heroImage, tags, dataI18nTitle } = Astro.props;
+
+const searchIndex = (await getCollection('blog'))
+	.filter((p) => !p.data.draft)
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+	.map((p) => ({
+		id: p.id,
+		title: p.data.title,
+		tags: p.data.tags ?? [],
+		pubDate: p.data.pubDate.toISOString(),
+	}));
 ---
 
 <html lang="en">
@@ -19,6 +30,7 @@ const { title, description, pubDate, updatedDate, heroImage, tags, dataI18nTitle
 		<BaseHead title={title} description={description} />
 		<style is:global>
 			main {
+				flex: 1 0 auto;
 				width: 100%;
 				max-width: 100%;
 				margin: 0;
@@ -40,7 +52,7 @@ const { title, description, pubDate, updatedDate, heroImage, tags, dataI18nTitle
 				width: 100%;
 				max-width: 1320px;
 				margin: 0 auto;
-				padding: 0 2rem 4rem;
+				padding: 0 2rem 1.5rem;
 				box-sizing: border-box;
 			}
 			.post-content {
@@ -52,7 +64,7 @@ const { title, description, pubDate, updatedDate, heroImage, tags, dataI18nTitle
 				width: 100%;
 				max-width: 100%;
 				margin: 0;
-				padding: 2rem 0 4rem;
+				padding: 2rem 0 1.5rem;
 				color: rgb(var(--text));
 				line-height: 1.75;
 			}
@@ -69,7 +81,7 @@ const { title, description, pubDate, updatedDate, heroImage, tags, dataI18nTitle
 				.post-body {
 					max-width: 1200px;
 					margin: 0 auto;
-					padding: 0 1.5rem 4rem;
+					padding: 0 1.5rem 1.5rem;
 				}
 				.post-content {
 					flex: 1 1 0;
@@ -162,10 +174,17 @@ const { title, description, pubDate, updatedDate, heroImage, tags, dataI18nTitle
 				overflow: hidden;
 				border: 1px solid rgb(var(--border));
 				background: rgb(var(--bg));
+				transition: box-shadow 0.2s ease, border-color 0.2s ease;
+			}
+			.prose .code-block-outer:hover {
+				box-shadow: 0 4px 14px rgba(var(--text-heading), 0.1);
 			}
 			[data-theme="dark"] .prose .code-block-outer {
 				background: transparent;
 				border-color: rgb(var(--border));
+			}
+			[data-theme="dark"] .prose .code-block-outer:hover {
+				box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 			}
 			.prose .code-block-header {
 				display: flex;
@@ -241,8 +260,8 @@ const { title, description, pubDate, updatedDate, heroImage, tags, dataI18nTitle
 	</head>
 
 	<body>
-		<Header />
-		<main>
+		<Header searchIndex={searchIndex} />
+		<main class="animate-fade-in">
 			<article>
 				<div class="hero-image">
 					{heroImage && <Image width={1020} height={510} src={heroImage} alt="" />}
@@ -250,7 +269,7 @@ const { title, description, pubDate, updatedDate, heroImage, tags, dataI18nTitle
 				<div class="post-body">
 					<div class="post-content">
 						<div class="prose">
-							<div class="title">
+							<div class="title animate-fade-in-delay">
 								<div class="date">
 									<FormattedDate date={pubDate} />
 									{

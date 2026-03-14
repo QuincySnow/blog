@@ -1,3 +1,6 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
 /*
   The CSS in this style tag is based off of Bear Blog's default CSS.
   https://github.com/HermanMartinus/bearblog/blob/297026a877bc2ab2b3bdfbd6b9f7961c350917dd/templates/styles/blog/default.css
@@ -38,19 +41,22 @@
 }
 @font-face {
 	font-family: "Atkinson";
-	src: url("/fonts/atkinson-regular.woff") format("woff");
+	src: var(--font-src-regular) format("woff");
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
 }
 @font-face {
 	font-family: "Atkinson";
-	src: url("/fonts/atkinson-bold.woff") format("woff");
+	src: var(--font-src-bold) format("woff");
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
 }
 body {
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
 	font-family: "Atkinson", sans-serif;
 	margin: 0;
 	padding: 0;
@@ -65,10 +71,11 @@ body {
 	line-height: 1.7;
 }
 main {
+	flex: 1 0 auto;
 	width: 720px;
 	max-width: calc(100% - 3rem);
 	margin: 0 auto;
-	padding: 2rem 1.5rem 4rem;
+	padding: 2rem 1.5rem 1.5rem;
 }
 h1,
 h2,
@@ -154,7 +161,7 @@ hr {
 		font-size: 18px;
 	}
 	main {
-		padding: 1rem 1rem 3rem;
+		padding: 1rem 1rem 1.5rem;
 		max-width: calc(100% - 2rem);
 	}
 }
@@ -175,4 +182,70 @@ hr {
 	clip-path: inset(50%);
 	/* added line to stop words getting smushed together (as they go onto separate lines and some screen readers do not understand line feeds as a space */
 	white-space: nowrap;
+}
+
+/* 简单动效：页面主体淡入 */
+@keyframes fade-in {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+.animate-fade-in {
+	animation: fade-in 0.4s ease-out;
+}
+
+/* 列表项错峰淡入 */
+@keyframes fade-in-up {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+.animate-stagger-children > * {
+	animation: fade-in-up 0.35s ease-out both;
+}
+.animate-stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+.animate-stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+.animate-stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+.animate-stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
+.animate-stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+.animate-stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+.animate-stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
+.animate-stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
+.animate-stagger-children > *:nth-child(9) { animation-delay: 0.45s; }
+.animate-stagger-children > *:nth-child(10) { animation-delay: 0.5s; }
+.animate-stagger-children > *:nth-child(n+11) { animation-delay: 0.55s; }
+
+/* 悬停微抬 + 阴影 */
+.hover-lift {
+	transition: transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+.hover-lift:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(var(--text-heading), 0.08);
+}
+[data-theme="dark"] .hover-lift:hover {
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* 按钮/链接悬停轻微缩放 */
+.hover-scale {
+	transition: transform 0.2s ease, color 0.2s ease;
+}
+.hover-scale:hover {
+	transform: scale(1.02);
+}
+
+/* 首页介绍区延迟淡入 */
+.animate-fade-in-delay {
+	animation: fade-in 0.5s ease-out 0.15s both;
 }

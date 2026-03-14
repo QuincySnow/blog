@@ -13,12 +13,20 @@ interface Props {
 }
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const fontRegular = withBase('/fonts/atkinson-regular.woff');
+const fontBold = withBase('/fonts/atkinson-bold.woff');
 
 const { title, description, image = FallbackImage } = Astro.props;
 ---
 
 <!-- Global Metadata -->
 <meta charset="utf-8" />
+<style is:inline>
+	:root {
+		--font-src-regular: url("{fontRegular}");
+		--font-src-bold: url("{fontBold}");
+	}
+</style>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <script is:inline>
 	(function () {

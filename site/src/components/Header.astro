@@ -2,30 +2,68 @@
 import { BASE_PATH, SITE_TITLE, withBase } from '../consts';
 import HeaderLink from './HeaderLink.astro';
 import { i18n } from '../i18n';
+
+export interface SearchIndexItem {
+	id: string;
+	title: string;
+	tags: string[];
+	pubDate: string;
+}
+
+interface Props {
+	searchIndex?: SearchIndexItem[];
+}
+
+const { searchIndex = [] } = Astro.props;
+const searchIndexJson = JSON.stringify(searchIndex);
 ---
 
 <header>
 	<nav>
-		<h2><a href={withBase('/')}>{SITE_TITLE}</a></h2>
+		<h2><a href={withBase('/')} class="transition-colors duration-200">{SITE_TITLE}</a></h2>
 		<div class="internal-links">
 			<HeaderLink href="/" data-i18n="nav.home">Home</HeaderLink>
-			<HeaderLink href="/blog" data-i18n="nav.blog">Blog</HeaderLink>
+			<HeaderLink href="/blog" data-i18n="nav.blog">Articles</HeaderLink>
+			<HeaderLink href="/tags" data-i18n="nav.tags">Tags</HeaderLink>
 			<HeaderLink href="/about" data-i18n="nav.about">About</HeaderLink>
 		</div>
 		<div class="header-actions">
-			<a href={withBase('/search')} class="icon-btn search-btn" aria-label="Search" title="Search">
+			<button type="button" class="icon-btn search-btn transition-colors duration-200" id="search-trigger" aria-label="Search" title="Search" aria-haspopup="dialog" aria-expanded="false">
 				<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-			</a>
-			<button type="button" class="icon-btn theme-toggle" aria-label="Toggle theme" title="Toggle theme">
+			</button>
+			<button type="button" class="icon-btn theme-toggle transition-colors duration-200" aria-label="Toggle theme" title="Toggle theme">
 				<span class="theme-icon-light" aria-hidden="true">☀</span>
 				<span class="theme-icon-dark" aria-hidden="true">🌙</span>
 			</button>
-			<button type="button" class="icon-btn lang-toggle" aria-label="中文" title="中文" data-lang="zh">
+			<button type="button" class="icon-btn lang-toggle transition-colors duration-200" aria-label="中文" title="中文" data-lang="zh">
 				<svg class="icon lang-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
 			</button>
 		</div>
 	</nav>
 </header>
+
+<div id="search-overlay" class="search-overlay" role="dialog" aria-modal="true" aria-label="Search" aria-hidden="true">
+	<div class="search-overlay-backdrop" id="search-overlay-backdrop"></div>
+	<div class="search-overlay-box">
+		<form class="search-overlay-form" id="search-overlay-form" role="search">
+			<label for="search-overlay-input" class="sr-only" data-i18n="search.label">搜索文章</label>
+			<input
+				id="search-overlay-input"
+				type="search"
+				autocomplete="off"
+				data-i18n-placeholder="search.placeholder"
+				placeholder="按标题、标签搜索…"
+				class="search-overlay-input"
+			/>
+			<button type="submit" class="search-overlay-submit" data-i18n="nav.search">搜索</button>
+		</form>
+		<div id="search-overlay-results" class="search-overlay-results" aria-live="polite"></div>
+	</div>
+</div>
+<script is:inline define:vars={{ searchIndexJson, basePath: BASE_PATH }}>
+	window.__SEARCH_INDEX__ = typeof searchIndexJson !== 'undefined' ? JSON.parse(searchIndexJson) : [];
+</script>
+
 	<script define:vars={{ i18n, basePath: BASE_PATH }}>
 		function getTheme() {
 			return document.documentElement.getAttribute('data-theme') || 'light';
@@ -79,9 +117,66 @@ import { i18n } from '../i18n';
 			});
 			var pathname = window.location.pathname || '/';
 			var path = (basePath ? pathname.replace(new RegExp('^' + basePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), '') : pathname).replace(/\/$/, '') || '/';
-			if (path === '/search') document.title = i18n[lang].search.documentTitle;
+			if (path === '/tags') document.title = i18n[lang].tags.documentTitle;
 			else if (path === '/about') document.title = i18n[lang].about.documentTitle;
 			else document.title = i18n[lang].site.title;
+		}
+		function openSearchOverlay(initialQuery) {
+			var overlay = document.getElementById('search-overlay');
+			var input = document.getElementById('search-overlay-input');
+			if (!overlay || !input) return;
+			if (typeof initialQuery === 'string') input.value = initialQuery;
+			overlay.classList.add('open');
+			overlay.setAttribute('aria-hidden', 'false');
+			var trigger = document.getElementById('search-trigger');
+			if (trigger) trigger.setAttribute('aria-expanded', 'true');
+			document.body.style.overflow = 'hidden';
+			input.focus();
+			runSearchOverlay();
+		}
+		function closeSearchOverlay() {
+			var overlay = document.getElementById('search-overlay');
+			if (!overlay) return;
+			overlay.classList.remove('open');
+			overlay.setAttribute('aria-hidden', 'true');
+			var trigger = document.getElementById('search-trigger');
+			if (trigger) trigger.setAttribute('aria-expanded', 'false');
+			document.body.style.overflow = '';
+		}
+		function runSearchOverlay() {
+			var input = document.getElementById('search-overlay-input');
+			var resultsEl = document.getElementById('search-overlay-results');
+			var index = window.__SEARCH_INDEX__;
+			if (!input || !resultsEl || !Array.isArray(index)) return;
+			var q = (input.value || '').trim().toLowerCase();
+			var list = index.filter(function (item) {
+				if (!q) return true;
+				var titleMatch = (item.title || '').toLowerCase().indexOf(q) >= 0;
+				var tagsMatch = (item.tags || []).some(function (t) { return t.toLowerCase().indexOf(q) >= 0; });
+				return titleMatch || tagsMatch;
+			});
+			var noResultsLabel = document.documentElement.lang && document.documentElement.lang.startsWith('zh') ? '没有匹配的文章' : 'No matching posts.';
+			if (list.length === 0) {
+				resultsEl.innerHTML = '<p class="search-overlay-no-results">' + noResultsLabel + '</p>';
+				resultsEl.style.display = 'block';
+				return;
+			}
+			var html = '<ul class="search-overlay-list">';
+			list.slice(0, 12).forEach(function (item) {
+				var href = basePath + '/blog/' + item.id + '/';
+				var dateStr = item.pubDate ? new Date(item.pubDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+				var tagsStr = (item.tags && item.tags.length) ? item.tags.slice(0, 4).join(' · ') : '';
+				html += '<li><a href="' + href + '"><span class="search-overlay-result-title">' + escapeHtml(item.title) + '</span><span class="search-overlay-result-meta">' + dateStr + (tagsStr ? ' · ' + escapeHtml(tagsStr) : '') + '</span></a></li>';
+			});
+			html += '</ul>';
+			if (list.length > 12) html += '<p class="search-overlay-more">' + (list.length - 12) + ' more…</p>';
+			resultsEl.innerHTML = html;
+			resultsEl.style.display = 'block';
+		}
+		function escapeHtml(s) {
+			var div = document.createElement('div');
+			div.textContent = s;
+			return div.innerHTML;
 		}
 		document.addEventListener('DOMContentLoaded', function () {
 			setTheme(getTheme());
@@ -94,6 +189,30 @@ import { i18n } from '../i18n';
 				langToggle.addEventListener('click', function () {
 					setLang(getLang() === 'zh' ? 'en' : 'zh');
 				});
+			}
+			var searchTrigger = document.getElementById('search-trigger');
+			var searchOverlay = document.getElementById('search-overlay');
+			var searchBackdrop = document.getElementById('search-overlay-backdrop');
+			var searchForm = document.getElementById('search-overlay-form');
+			var searchInput = document.getElementById('search-overlay-input');
+			if (searchTrigger) searchTrigger.addEventListener('click', function () { openSearchOverlay(); });
+			if (searchBackdrop) searchBackdrop.addEventListener('click', closeSearchOverlay);
+			document.addEventListener('keydown', function (e) {
+				if (e.key === 'Escape' && searchOverlay && searchOverlay.classList.contains('open')) closeSearchOverlay();
+			});
+			if (searchForm) searchForm.addEventListener('submit', function (e) { e.preventDefault(); runSearchOverlay(); });
+			if (searchInput) {
+				var searchDebounce;
+				searchInput.addEventListener('input', function () {
+					clearTimeout(searchDebounce);
+					searchDebounce = setTimeout(runSearchOverlay, 200);
+				});
+			}
+			var params = new URLSearchParams(window.location.search);
+			var searchParam = params.get('search');
+			if (searchParam) {
+				history.replaceState({}, '', window.location.pathname + (window.location.hash || ''));
+				openSearchOverlay(searchParam);
 			}
 		});
 	</script>
@@ -196,5 +315,139 @@ import { i18n } from '../i18n';
 	}
 	[data-theme="dark"] .theme-icon-dark {
 		display: inline;
+	}
+</style>
+<style is:global>
+	.search-overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 9999;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		visibility: hidden;
+		opacity: 0;
+		transition: visibility 0.2s ease, opacity 0.2s ease;
+	}
+	.search-overlay.open {
+		visibility: visible;
+		opacity: 1;
+	}
+	.search-overlay-backdrop {
+		position: absolute;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.25);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+	}
+	[data-theme="dark"] .search-overlay-backdrop {
+		background: rgba(0, 0, 0, 0.5);
+		backdrop-filter: blur(16px);
+		-webkit-backdrop-filter: blur(16px);
+	}
+	.search-overlay-box {
+		position: relative;
+		width: 90%;
+		max-width: 480px;
+		max-height: 85vh;
+		display: flex;
+		flex-direction: column;
+		padding: 1.5rem;
+		background: rgba(255, 255, 255, 0.75);
+		backdrop-filter: blur(20px);
+		-webkit-backdrop-filter: blur(20px);
+		border-radius: 16px;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+	}
+	[data-theme="dark"] .search-overlay-box {
+		background: rgba(30, 32, 40, 0.85);
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+	}
+	.search-overlay-form {
+		display: flex;
+		gap: 0.75rem;
+		align-items: center;
+	}
+	.search-overlay-input {
+		flex: 1;
+		min-width: 0;
+		padding: 0.75rem 1rem;
+		font-size: 1rem;
+		line-height: 1.4;
+		border: 1px solid rgb(var(--border));
+		border-radius: 10px;
+		background: rgba(255, 255, 255, 0.9);
+		color: rgb(var(--text-heading));
+		outline: none;
+		transition: border-color 0.2s ease, box-shadow 0.2s ease;
+	}
+	.search-overlay-input::placeholder {
+		color: rgb(var(--gray));
+	}
+	.search-overlay-input:focus {
+		border-color: var(--accent);
+		box-shadow: 0 0 0 3px rgba(35, 55, 255, 0.2);
+	}
+	[data-theme="dark"] .search-overlay-input {
+		background: rgba(0, 0, 0, 0.3);
+		color: rgb(var(--text));
+	}
+	.search-overlay-submit {
+		padding: 0.75rem 1.25rem;
+		font-size: 0.95rem;
+		font-weight: 600;
+		color: #fff;
+		background: var(--accent);
+		border: none;
+		border-radius: 10px;
+		cursor: pointer;
+		transition: background 0.2s ease, transform 0.15s ease;
+	}
+	.search-overlay-submit:hover {
+		background: var(--accent-dark);
+	}
+	.search-overlay-submit:active {
+		transform: scale(0.98);
+	}
+	.search-overlay-results {
+		margin-top: 1rem;
+		max-height: 50vh;
+		overflow-y: auto;
+		display: none;
+	}
+	.search-overlay-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	.search-overlay-list li {
+		margin: 0;
+		border-bottom: 1px solid rgb(var(--border));
+	}
+	.search-overlay-list a {
+		display: block;
+		padding: 0.6rem 0;
+		text-decoration: none;
+		color: rgb(var(--text-heading));
+		transition: color 0.2s ease;
+	}
+	.search-overlay-list a:hover {
+		color: var(--accent);
+	}
+	.search-overlay-result-title {
+		display: block;
+		font-weight: 600;
+		font-size: 0.95rem;
+		margin-bottom: 0.15rem;
+	}
+	.search-overlay-result-meta {
+		font-size: 0.8rem;
+		color: rgb(var(--gray));
+	}
+	.search-overlay-no-results,
+	.search-overlay-more {
+		margin: 0;
+		font-size: 0.9rem;
+		color: rgb(var(--gray));
 	}
 </style>

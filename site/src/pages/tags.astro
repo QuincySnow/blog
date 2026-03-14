@@ -1,0 +1,95 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import { SITE_TITLE, withBase } from '../consts';
+
+const allPosts = await getCollection('blog');
+const tagCount = new Map<string, number>();
+for (const post of allPosts) {
+	if (post.data.draft) continue;
+	for (const tag of post.data.tags ?? []) {
+		tagCount.set(tag, (tagCount.get(tag) ?? 0) + 1);
+	}
+}
+const tags = Array.from(tagCount.entries())
+	.sort((a, b) => b[1] - a[1])
+	.map(([name, count]) => ({ name, count }));
+const searchIndex = allPosts
+	.filter((p) => !p.data.draft)
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+	.map((p) => ({
+		id: p.id,
+		title: p.data.title,
+		tags: p.data.tags ?? [],
+		pubDate: p.data.pubDate.toISOString(),
+	}));
+---
+
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<BaseHead title={`${SITE_TITLE} - 标签`} description="文章标签" />
+		<style>
+			.tags-page-title {
+				margin: 0 0 1.5rem;
+				font-size: 1.5rem;
+				color: rgb(var(--text-heading));
+			}
+			.tags-list {
+				list-style: none;
+				margin: 0;
+				padding: 0;
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.75rem 1.25rem;
+			}
+			.tags-list li {
+				margin: 0;
+				padding: 0;
+			}
+			.tags-list a {
+				display: inline-block;
+				padding: 0.4em 0.75em;
+				text-decoration: none;
+				color: rgb(var(--text));
+				background: rgb(var(--gray-light));
+				border-radius: 6px;
+				font-size: 0.95rem;
+				transition: color 0.2s ease, background 0.2s ease;
+			}
+			.tags-list a:hover {
+				color: var(--accent);
+				background: rgba(35, 55, 255, 0.1);
+			}
+			[data-theme="dark"] .tags-list a {
+				background: rgba(255, 255, 255, 0.08);
+			}
+			[data-theme="dark"] .tags-list a:hover {
+				background: rgba(33, 55, 255, 0.25);
+			}
+			.tag-count {
+				opacity: 0.8;
+				font-size: 0.85em;
+				margin-left: 0.25em;
+			}
+		</style>
+	</head>
+	<body>
+		<Header searchIndex={searchIndex} />
+		<main class="animate-fade-in">
+			<h1 class="tags-page-title" data-i18n="tags.title">标签</h1>
+			<ul class="tags-list animate-stagger-children">
+				{tags.map(({ name, count }) => (
+					<li>
+						<a href={`${withBase('/')}?search=${encodeURIComponent(name)}`} class="transition-colors duration-200">
+							{name}<span class="tag-count">({count})</span>
+						</a>
+					</li>
+				))}
+			</ul>
+		</main>
+		<Footer />
+	</body>
+</html>
