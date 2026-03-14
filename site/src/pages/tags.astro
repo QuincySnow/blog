@@ -58,14 +58,14 @@ const searchIndex = allPosts
 				text-decoration: none;
 				color: rgb(var(--text));
 				background: rgb(var(--gray-light));
-				border-radius: 6px;
+				border-radius: var(--radius-sm);
 				font-size: 0.95rem;
-				transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+				transition: color var(--duration-normal) var(--ease-out), background var(--duration-normal) var(--ease-out), transform var(--duration-normal) var(--ease-out);
 			}
 			.tags-list a:hover {
 				color: var(--accent);
 				background: rgba(35, 55, 255, 0.1);
-				transform: scale(1.05);
+				transform: scale(1.03);
 			}
 			.tags-list a:active {
 				transform: scale(0.98);

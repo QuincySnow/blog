@@ -1,6 +1,6 @@
 ---
 name: blog-project
-description: Conventions and structure for this Astro blog (QuincySnow). Use when editing the blog, adding pages or links, changing navigation, or working in site/ or content. Covers base path, internal links, i18n, layout, package manager (Bun only), and Find Skills / adding community skills (use bunx, not npm/npx).
+description: Conventions and structure for this Astro blog (QuincySnow). Use when editing the blog, adding pages or links, changing navigation, or working in site/ or content. Covers base path, internal links, i18n, layout, static assets (images/, gif/), package manager (Bun only), and Find Skills (use bunx, not npm/npx).
 ---
 
 # Blog 项目约定
@@ -61,6 +61,15 @@ description: Conventions and structure for this Astro blog (QuincySnow). Use whe
 - **HeaderLink.astro**：接收“逻辑路径”（如 `/`、`/blog`、`/about`），内部用 `withBase(href)` 输出真实 href；active 判断基于去掉 base 后的 pathname，无需在调用处再写 base。
 - 若在客户端脚本里根据 pathname 做分支（如设置 document.title），需先去掉 base 再比较；Header 中已通过 `define:vars={{ basePath: BASE_PATH }}` 传入并做字符串截断。
 
+## 静态资源：images 与 gif
+
+- **`site/public/images/`**：存放文章或页面用到的静态图片（PNG、JPG、WebP 等）。直接放入即可，构建时原样输出。
+- **`site/public/gif/`**：存放动图（GIF 等）。同上，原样输出。
+- **引用方式**：`public/` 下文件部署后对应站点根路径；因配置了 `base: '/blog'`，在 Markdown 或组件中引用时需带 base：
+  - 图片：`withBase('/images/文件名.png')` 或 Markdown：`![alt](url)` 中 url 使用绝对路径 `/blog/images/xxx.png`（或通过布局注入 base 的完整 URL）。
+  - 动图：`withBase('/gif/文件名.gif')`。
+- 文章正文内引用：若使用 Markdown 图片语法，可写 `![描述](/blog/images/xxx.png)`；若在 Astro 组件里用 `<img>`，用 `src={withBase('/images/xxx.png')}`。
+
 ## 资源与 head
 
 - **BaseHead.astro**：canonical、favicon、sitemap、RSS、字体 preload 等均已使用 `withBase(...)`。
@@ -91,5 +100,6 @@ description: Conventions and structure for this Astro blog (QuincySnow). Use whe
 - [ ] 新链接使用 `withBase('/...')`，未写死根路径 `/xxx`
 - [ ] 若在 Header/导航加入口，使用 HeaderLink 或带 withBase 的 `<a>`
 - [ ] 新 head 资源（favicon、字体等）使用 withBase
+- [ ] 新图片/动图放入 `site/public/images/` 或 `site/public/gif/`，引用时用 `withBase('/images/...')` 或 `withBase('/gif/...')`
 - [ ] 新文章：中文稿加 `lang: zh`；英文稿用 `-en.md` 且加 `lang: en`；正文内跨语言引用用相对 slug
 - [ ] 构建通过：`cd site && bun run build`

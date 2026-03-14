@@ -112,7 +112,7 @@ const searchIndex = (await getCollection('blog'))
 				text-decoration: none;
 				position: relative;
 				border-bottom: 1px solid transparent;
-				transition: color 0.2s ease, border-color 0.2s ease;
+				transition: color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
 			}
 			.prose-content a::after {
 				content: '';
@@ -124,7 +124,7 @@ const searchIndex = (await getCollection('blog'))
 				background: var(--accent);
 				transform: scaleX(0);
 				transform-origin: right;
-				transition: transform 0.22s ease;
+				transition: transform var(--duration-normal) var(--ease-out);
 			}
 			.prose-content a:hover::after {
 				transform-origin: left;
@@ -251,39 +251,45 @@ const searchIndex = (await getCollection('blog'))
 				margin: 0 0 0.75rem;
 			}
 			.toc-nav {
-				list-style: none;
-				margin: 0;
-				padding: 0;
 				font-size: 0.85rem;
 				line-height: 1.5;
 			}
+			.toc-nav .toc-list {
+				list-style: none;
+				margin: 0;
+				padding: 0;
+			}
 			.toc-nav a {
 				display: block;
-				padding: 0.25rem 0;
+				padding: 0.35rem 0.5rem 0.35rem 0.25rem;
+				margin: 0 0 0 -0.25rem;
 				color: rgb(var(--text));
 				text-decoration: none;
 				opacity: 0.85;
+				border-radius: var(--radius-sm);
+				border-left: 3px solid transparent;
+				transition: color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out), border-left-color var(--duration-fast) var(--ease-out);
 			}
 			.toc-nav a:hover {
 				color: var(--accent);
 				opacity: 1;
 			}
 			.toc-sidebar .toc-nav a.active {
-				background: rgba(33, 55, 255, 0.12);
+				background-color: rgba(35, 55, 255, 0.1);
 				color: var(--accent);
 				opacity: 1;
-				border-radius: 6px;
-				margin: 0 -0.25rem;
-				padding: 0.35rem 0.25rem;
+				border-left-color: var(--accent);
+				font-weight: 600;
 			}
 			[data-theme="dark"] .toc-sidebar .toc-nav a.active {
-				background: rgba(33, 55, 255, 0.25);
+				background-color: rgba(99, 120, 255, 0.18);
+				border-left-color: var(--accent);
 			}
-			.toc-nav .toc-h3 {
-				padding-left: 0.75rem;
+			.toc-nav .toc-h3 a {
+				padding-left: 1rem;
 			}
-			.toc-nav .toc-h4 {
-				padding-left: 1.25rem;
+			.toc-nav .toc-h4 a {
+				padding-left: 1.5rem;
 			}
 			@media (max-width: 900px) {
 				.toc-sidebar {
@@ -588,7 +594,8 @@ const searchIndex = (await getCollection('blog'))
 					if (!content) return;
 					var headings = content.querySelectorAll('h2, h3, h4');
 					if (headings.length === 0) return;
-					var fragment = document.createDocumentFragment();
+					var ul = document.createElement('ul');
+					ul.className = 'toc-list';
 					var idToLink = {};
 					var usedIds = {};
 					headings.forEach(function (h) {
@@ -605,10 +612,10 @@ const searchIndex = (await getCollection('blog'))
 						a.textContent = h.textContent.trim();
 						a.setAttribute('data-toc-id', id);
 						li.appendChild(a);
-						fragment.appendChild(li);
+						ul.appendChild(li);
 						idToLink[id] = a;
 					});
-					nav.appendChild(fragment);
+					nav.appendChild(ul);
 					function setActive(id) {
 						Object.keys(idToLink).forEach(function (k) {
 							var link = idToLink[k];
@@ -622,11 +629,14 @@ const searchIndex = (await getCollection('blog'))
 						});
 					}
 					function updateActiveFromScroll() {
-						var topOffset = 100;
+						var topOffset = 120;
 						var current = null;
-						for (var i = 0; i < headings.length; i++) {
+						for (var i = headings.length - 1; i >= 0; i--) {
 							var h = headings[i];
-							if (h.getBoundingClientRect().top <= topOffset) current = h.id;
+							if (h.getBoundingClientRect().top <= topOffset) {
+								current = h.id;
+								break;
+							}
 						}
 						if (current && idToLink[current]) setActive(current);
 						else if (headings[0] && idToLink[headings[0].id]) setActive(headings[0].id);

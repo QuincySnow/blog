@@ -51,7 +51,6 @@ const firstImageSrc = firstHero ? getImage({ src: firstHero, width: 720, height:
 				text-decoration: none;
 				padding: 1.5rem 0;
 				border-bottom: 1px solid rgb(var(--border));
-				transition: color 0.2s ease;
 			}
 			.blog-list a:hover .title,
 			.blog-list a:hover .date,
@@ -63,18 +62,21 @@ const firstImageSrc = firstHero ? getImage({ src: firstHero, width: 720, height:
 				font-size: 1.35rem;
 				line-height: 1.4;
 				color: rgb(var(--text-heading));
+				transition: color var(--duration-fast) var(--ease-out);
 			}
 			.blog-list .date {
 				margin: 0;
 				font-size: 0.9rem;
 				color: rgb(var(--text));
 				opacity: 0.85;
+				transition: color var(--duration-fast) var(--ease-out);
 			}
 			.blog-list .tags {
 				margin: 0.5rem 0 0;
 				font-size: 0.85rem;
 				color: rgb(var(--text));
 				opacity: 0.75;
+				transition: color var(--duration-fast) var(--ease-out);
 			}
 			.blog-list .tag {
 				display: inline-block;
