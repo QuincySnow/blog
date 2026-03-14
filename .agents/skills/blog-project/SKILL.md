@@ -1,11 +1,19 @@
 ---
 name: blog-project
-description: Conventions and structure for this Astro blog (QuincySnow). Use when editing the blog, adding pages or links, changing navigation, or working in site/ or content. Covers base path, internal links, i18n, and layout.
+description: Conventions and structure for this Astro blog (QuincySnow). Use when editing the blog, adding pages or links, changing navigation, or working in site/ or content. Covers base path, internal links, i18n, layout, and package manager (Bun only).
 ---
 
 # Blog 项目约定
 
 本 Skill 描述本仓库中 Astro 博客的目录与约定，便于增改页面、链接与内容时保持一致。
+
+## 包管理器：仅使用 Bun
+
+- **本仓库统一使用 Bun**，不使用 npm、yarn、pnpm 等。
+- 安装依赖：`bun install`（在 `site/` 下执行）。
+- 开发：`bun run dev`；构建：`bun run build`；其它脚本一律用 `bun run <script>`。
+- 添加依赖时用 `bun add <pkg>` 或 `bun add -d <pkg>`，不要写 `npm install` / `npm i` / `yarn` / `pnpm` 等。
+- 文档、注释、Skill 中的示例命令均以 Bun 为准。
 
 ## 项目位置与 base
 
@@ -65,4 +73,4 @@ description: Conventions and structure for this Astro blog (QuincySnow). Use whe
 - [ ] 新链接使用 `withBase('/...')`，未写死根路径 `/xxx`
 - [ ] 若在 Header/导航加入口，使用 HeaderLink 或带 withBase 的 `<a>`
 - [ ] 新 head 资源（favicon、字体等）使用 withBase
-- [ ] 构建通过：`cd site && npm run build`
+- [ ] 构建通过：`cd site && bun run build`
