@@ -1,6 +1,6 @@
 ---
 name: browser-debugging
-description: Setup and use browser debugging for this project (Chrome CDP, MCP chrome-devtools, performance trace). Use when the user needs to run Lighthouse, performance tests, navigate or inspect pages from the agent, or when configuring Chrome remote debugging or MCP.
+description: Setup and use browser debugging for this project (Chrome CDP, MCP chrome-devtools, performance trace). Use when the user needs to run Lighthouse, performance tests, navigate or inspect pages from the agent, or when configuring Chrome remote debugging or MCP. This repo requires Bun; use bunx (not npx) for MCP/CLI.
 ---
 
 # 浏览器调试（本仓库）
@@ -30,12 +30,12 @@ description: Setup and use browser debugging for this project (Chrome CDP, MCP c
 
 ## 2. MCP 配置（chrome-devtools）
 
-用户级配置 `~/.cursor/mcp.json` 中，**只**用 `--browserUrl` 连接已有 Chrome，不要与 `--autoConnect` 混用：
+用户级配置 `~/.cursor/mcp.json` 中，**只**用 `--browserUrl` 连接已有 Chrome，不要与 `--autoConnect` 混用。**本仓库规定使用 Bun**，用 `bunx` 不要用 `npx`：
 
 ```json
 "chrome-devtools": {
-  "command": "npx",
-  "args": ["-y", "chrome-devtools-mcp@latest", "--browserUrl", "http://localhost:9222"]
+  "command": "bunx",
+  "args": ["chrome-devtools-mcp@latest", "--browserUrl", "http://localhost:9222"]
 }
 ```
 
@@ -54,7 +54,7 @@ Cursor 中显示的服务名多为 **user-chrome-devtools**。调用前确保 Ch
 - `performance_stop_trace`：结束并返回 trace 摘要（LCP、CLS、TTFB 等）。
 - `lighthouse_audit`：跑 Lighthouse（不含 Performance；要 Performance 用 performance trace）。
 
-站点开发地址：`http://localhost:4321/blog`（`site/` 下 `bun run dev`）。
+站点开发地址：`http://localhost:4321/blog`（`site/` 下必须用 `bun run dev`，不要用 npm run dev）。
 
 ## 5. 可选：cursor-ide-browser
 

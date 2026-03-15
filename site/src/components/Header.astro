@@ -72,9 +72,13 @@ const searchIndexJson = JSON.stringify(searchIndex);
 		function getTheme() {
 			return document.documentElement.getAttribute('data-theme') || 'light';
 		}
-		function setTheme(theme) {
+		/** 仅当用户手动点击过主题按钮时 localStorage 才有 "light"/"dark"；无或其它值表示跟随系统 */
+		function getStoredTheme() {
+			return localStorage.getItem('theme');
+		}
+		function setTheme(theme, fromUser) {
 			document.documentElement.setAttribute('data-theme', theme);
-			localStorage.setItem('theme', theme);
+			if (fromUser) localStorage.setItem('theme', theme);
 			document.querySelectorAll('.theme-icon-light').forEach(function (el) {
 				el.style.display = theme === 'light' ? 'inline' : 'none';
 			});
@@ -197,10 +201,21 @@ const searchIndexJson = JSON.stringify(searchIndex);
 			return div.innerHTML;
 		}
 		document.addEventListener('DOMContentLoaded', function () {
-			setTheme(getTheme());
+			var stored = getStoredTheme();
+			if (stored === 'light' || stored === 'dark') {
+				setTheme(stored, false);
+			} else {
+				var mq = window.matchMedia('(prefers-color-scheme: dark)');
+				setTheme(mq.matches ? 'dark' : 'light', false);
+				mq.addEventListener('change', function (e) {
+					if (getStoredTheme() !== 'light' && getStoredTheme() !== 'dark') {
+						setTheme(e.matches ? 'dark' : 'light', false);
+					}
+				});
+			}
 			setLang(getLang());
 			document.querySelector('.theme-toggle').addEventListener('click', function () {
-				setTheme(getTheme() === 'dark' ? 'light' : 'dark');
+				setTheme(getTheme() === 'dark' ? 'light' : 'dark', true);
 			});
 			var langToggle = document.querySelector('.lang-toggle');
 			if (langToggle) {

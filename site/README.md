@@ -46,9 +46,27 @@ All commands are run from the root of the project, from a terminal:
 | `bun dev`             | Starts local dev server at `localhost:4321`      |
 | `bun build`           | Build your production site to `./dist/`          |
 | `bun preview`         | Preview your build locally, before deploying     |
+| `bun run test`        | 运行 Vitest 单元测试                             |
+| `bun run test:watch`  | Vitest 监听模式                                  |
+| `bun run test:e2e`    | 运行 Playwright E2E 测试（会先启动 preview 端口 4323） |
+| `bun run test:e2e:ui`| Playwright 交互 UI 运行 E2E                      |
 | `bun lighthouse`      | 本地 Lighthouse 测评（需先 `bun run preview`，且本机已安装 Chrome/Chromium） |
 | `bun astro ...`       | Run CLI commands like `astro add`, `astro check` |
 | `bun astro -- --help` | Get help using the Astro CLI                     |
+
+## 🧪 测试（Vitest + Playwright）
+
+- **单元**：Vitest，配置在 `vitest.config.ts`，用例在 `src/**/*.test.ts`。
+  - `consts.test.ts`：`SITE_TITLE`、`BASE_PATH`、`withBase` 各种路径与纯度。
+  - `i18n.test.ts`：`DEFAULT_LANG`、i18n 结构、`getStoredLang`/`setStoredLang`、`getStoredTheme`/`setStoredTheme`（含 SSR 与 localStorage mock）。
+- **E2E**：Playwright，配置在 `playwright.config.ts`，用例在 `e2e/*.spec.ts`。
+  - `home.spec.ts`：首页标题、导航链接（含 base 前缀）、主题/语言按钮、文章列表页。
+  - `about.spec.ts`：关于页、作品集标题、GitHub 链接。
+  - `tags.spec.ts`：标签列表页与标题。
+  - `blog-post.spec.ts`：文章详情页、标题与目录/正文、返回列表。
+  - `interaction.spec.ts`：搜索弹窗（打开、输入、Escape 关闭）、主题切换（`data-theme`）、语言切换（`lang` 与导航文案）。
+- 会自动执行 `bun run preview -- --port 4323` 并访问 `http://localhost:4323/blog`；若本机已有 preview 在 4323，会复用（`reuseExistingServer`）。
+- 首次跑 E2E 需安装浏览器：`bunx playwright install chromium`（或 `bunx playwright install` 装全部）。
 
 ## 📊 本地 Lighthouse 测评
 

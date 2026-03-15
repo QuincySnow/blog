@@ -1,19 +1,19 @@
 ---
 name: blog-project
-description: Conventions and structure for this Astro blog (QuincySnow). Use when editing the blog, adding pages or links, changing navigation, or working in site/ or content. Covers base path, internal links, i18n, layout, static assets (images/, gif/), package manager (Bun only), and Find Skills (use bunx, not npm/npx).
+description: Conventions and structure for this Astro blog (QuincySnow). Use when editing the blog, adding pages or links, changing navigation, or working in site/ or content. Covers base path, internal links, i18n, layout, static assets (images/, gif/), package manager (Bun required—must use Bun, not npm/yarn/pnpm), and Find Skills (use bunx, not npx).
 ---
 
 # Blog 项目约定
 
 本 Skill 描述本仓库中 Astro 博客的目录与约定，便于增改页面、链接与内容时保持一致。
 
-## 包管理器：仅使用 Bun
+## 包管理器：必须使用 Bun
 
-- **本仓库统一使用 Bun**，不使用 npm、yarn、pnpm 等。
+- **本仓库规定：必须使用 Bun**，禁止使用 npm、yarn、pnpm 等。所有与本仓库相关的命令、文档、Skill 示例均以 Bun 为准。
 - 安装依赖：`bun install`（在 `site/` 下执行）。
 - 开发：`bun run dev`；构建：`bun run build`；其它脚本一律用 `bun run <script>`。
-- 添加依赖时用 `bun add <pkg>` 或 `bun add -d <pkg>`，不要写 `npm install` / `npm i` / `yarn` / `pnpm` 等。
-- 文档、注释、Skill 中的示例命令均以 Bun 为准；本仓库内所有 Skills（含 astro、deploy-to-vercel 等）的 CLI 示例已统一为 `bunx`/`bun run`，不使用 `npx`/`npm run`。
+- 添加依赖时用 `bun add <pkg>` 或 `bun add -d <pkg>`，禁止写 `npm install` / `npm i` / `yarn` / `pnpm` 等。
+- 文档、注释、Skill 中的示例命令均必须使用 Bun；本仓库内所有 Skills（含 astro、deploy-to-vercel、browser-debugging 等）的 CLI 示例一律为 `bunx`/`bun run`，禁止使用 `npx`/`npm run`。
 
 ### 查找与添加 Skills（Find Skills）
 
@@ -110,4 +110,4 @@ description: Conventions and structure for this Astro blog (QuincySnow). Use whe
 - [ ] 新图片/动图放入 `site/public/images/` 或 `site/public/gif/`，引用时用 `withBase('/images/...')` 或 `withBase('/gif/...')`
 - [ ] 新文章：中文稿加 `lang: zh`；英文稿用 `-en.md` 且加 `lang: en`；正文内跨语言引用用相对 slug
 - [ ] 关于页新增项目：在 `projects` 与 i18n `about` 中补全，避免在模板中使用 `Record<string, string>` 类型断言
-- [ ] 构建通过：`cd site && bun run build`
+- [ ] 构建通过：`cd site && bun run build`（必须用 Bun，不要用 npm run build）

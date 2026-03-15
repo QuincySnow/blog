@@ -10,6 +10,8 @@ metadata:
 
 Deploy any project to Vercel. **Always deploy as preview** (not production) unless the user explicitly asks for production.
 
+**本仓库约定：必须使用 Bun。** 安装/运行 CLI 时使用 `bun install -g`、`bunx vercel` 等，不使用 npm/npx。
+
 The goal is to get the user into the best long-term setup: their project linked to Vercel with git-push deploys. Every method below tries to move the user closer to that state.
 
 ## Step 1: Gather Project State

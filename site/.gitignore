@@ -25,3 +25,12 @@ pnpm-debug.log*
 
 # Lighthouse 报告（本地测评生成）
 lighthouse-report.html
+
+# Playwright E2E 测试产物
+test-results/
+playwright-report/
+blob-report/
+*.trace.zip
+
+# Vitest 覆盖率（若后续启用 coverage）
+coverage/

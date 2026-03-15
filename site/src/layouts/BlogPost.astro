@@ -641,7 +641,24 @@ const searchIndex = (await getCollection('blog'))
 						if (current && idToLink[current]) setActive(current);
 						else if (headings[0] && idToLink[headings[0].id]) setActive(headings[0].id);
 					}
-					window.addEventListener('scroll', updateActiveFromScroll, { passive: true });
+					// 节流：滚动中最多每 80ms 更新一次；并在滚动停止后 120ms 再更新一次，保证快速跳转后高亮正确
+					var lastRun = 0;
+					var scrollTimeout = null;
+					var throttleMs = 80;
+					var trailingMs = 120;
+					function onScroll() {
+						var now = Date.now();
+						if (now - lastRun >= throttleMs) {
+							lastRun = now;
+							updateActiveFromScroll();
+						}
+						if (scrollTimeout) clearTimeout(scrollTimeout);
+						scrollTimeout = setTimeout(function () {
+							scrollTimeout = null;
+							updateActiveFromScroll();
+						}, trailingMs);
+					}
+					window.addEventListener('scroll', onScroll, { passive: true });
 					requestAnimationFrame(function () {
 						requestAnimationFrame(updateActiveFromScroll);
 					});

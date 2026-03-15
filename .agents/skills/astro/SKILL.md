@@ -13,6 +13,8 @@ metadata:
 
 Astro is the web framework for content-driven websites.
 
+**本仓库约定：必须使用 Bun。** 所有 CLI 命令均使用 `bunx` / `bun run`，不使用 npx / npm run。
+
 ---
 
 ## Quick Reference
