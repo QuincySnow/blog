@@ -111,3 +111,27 @@ description: Conventions and structure for this Astro blog (QuincySnow). Use whe
 - [ ] 新文章：中文稿加 `lang: zh`；英文稿用 `-en.md` 且加 `lang: en`；正文内跨语言引用用相对 slug
 - [ ] 关于页新增项目：在 `projects` 与 i18n `about` 中补全，避免在模板中使用 `Record<string, string>` 类型断言
 - [ ] 构建通过：`cd site && bun run build`（必须用 Bun，不要用 npm run build）
+
+## Markdown 锚点语法注意事项
+
+**禁止使用** `{#anchor}` 语法！此语法会导致标题渲染异常（显示为纯文本而非 `<h2>`/`<h3>` 标签）。
+
+**正确做法**：使用 `<span id="anchor"></span>` HTML 锚点：
+
+```markdown
+## 标题<span id="my-anchor"></span>
+```
+
+或直接省略锚点，依赖自动生成的 slug（如 `## 我的标题` → `#我的-标题`）。
+
+**错误示例**：
+```markdown
+## 我的标题 {#my-anchor}  ❌ 会导致标题渲染异常
+```
+
+**正确示例**：
+```markdown
+## 我的标题<span id="my-anchor"></span>  ✅
+```
+
+**注意**：不要在 Markdown 标题前插入 `<div>` 等块级元素，会打断解析。
