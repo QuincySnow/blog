@@ -17,19 +17,14 @@ tags:
   - nodejs
   - bun
   - go
----
-
-    - rust
-    - ruby
-    - java
-    - php
-    - cpp
-    - 输入法
-    - 教程
-
-category: Linux
+  - rust
+  - ruby
+  - java
+  - php
+  - cpp
+  - 输入法
+  - 教程
 lang: zh
-
 ---
 
 今天把几篇分散的 Linux 桌面"硬核配置"笔记合并成一篇，覆盖五个高频场景：
