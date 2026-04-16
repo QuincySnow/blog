@@ -14,9 +14,9 @@ tags: ["OpenCode", "AI 编程", "效率工具"]
 
 ## 为什么选择这三个插件？
 
-- **Superpowers**（obra/superpowers）：给 AI 装上真正的软件工程 SOP（Standard Operating Procedure）。它会自动强化 Planning、TDD（测试驱动开发）、代码审查、git worktree 隔离、根因分析等流程。避免了"随便生成代码"的 vibe coding，让 Plan 更严谨，Build 更可靠。
-- **DCP (opencode-dynamic-context-pruning)**：省 token 神器！它非破坏性地剪枝过时工具输出（重复 read file、旧 ls 结果等），单次长会话能轻松节省 30-60% token（有时一次去掉 50k+ 无用上下文）。长迭代 Build 时特别明显，预算敏感的朋友一定会爱上它。
-- **Notificator**（mohak34/opencode-notifier + BurntToast）：在 WSL 环境下实现 Windows 桌面 Toast 通知 + 声音提醒。Build 完成、出错、需要人工确认时自动弹窗不用一直盯着终端。
+- **Superpowers**（[obra/superpowers](https://github.com/obra/superpowers)）：给 AI 装上真正的软件工程 SOP（Standard Operating Procedure）。它会自动强化 Planning、TDD（测试驱动开发）、代码审查、git worktree 隔离、根因分析等流程。避免了"随便生成代码"的 vibe coding，让 Plan 更严谨，Build 更可靠。
+- **DCP**（[opencode-dynamic-context-pruning](https://github.com/Opencode-DCP/opencode-dynamic-context-pruning)）：省 token 神器！它非破坏性地剪枝过时工具输出（重复 read file、旧 ls 结果等），单次长会话能轻松节省 30-60% token（有时一次去掉 50k+ 无用上下文）。长迭代 Build 时特别明显，预算敏感的朋友一定会爱上它。
+- **Notificator**（[mohak34/opencode-notifier](https://github.com/mohak34/opencode-notifier) + BurntToast）：在 WSL 环境下实现 Windows 桌面 Toast 通知 + 声音提醒。Build 完成、出错、需要人工确认时自动弹窗不用一直盯着终端。
 
 这三个插件**轻量、不冲突、零云依赖风险**（DCP 和 Superpowers 完全本地），完美适配大模型做规划、小模型做迭代的搭配。
 
@@ -37,12 +37,73 @@ tags: ["OpenCode", "AI 编程", "效率工具"]
    opencode plugin install opencode-dynamic-context-pruning@latest
    ```
 
-3. **Notificator**（已配置 BurntToast）：
+3. **Notificator**（需要 BurntToast 模块）：
    在 `opencode.jsonc` 中添加：
    ```json
    "@mohak34/opencode-notifier"
    ```
-   并配置 WSL 专用 PowerShell 弹窗（已搞定）。
+   首次使用前安装 BurntToast 模块（ PowerShell 中执行）：
+   ```powershell
+   Install-Module -Name BurntToast -Force -Scope CurrentUser
+   ```
+   并配置 WSL 专用 PowerShell 弹窗：
+
+   ```json
+   {
+     "notificator": {
+       "command": {
+         "enabled": true,
+         "path": "pwsh.exe",
+         "args": [
+           "-NoProfile",
+           "-Command",
+           "$event = '{event}'; if ($event -in @('permission','complete','error','question')) { New-BurntToastNotification -Text $event, '{message}' -Sound 'Default' }"
+         ]
+       },
+       "events": {
+         "user_message": {
+           "notification": false,
+           "sound": false,
+           "command": false
+         },
+         "session_started": {
+           "notification": false,
+           "sound": false,
+           "command": false
+         },
+         "permission": {
+           "notification": true,
+           "sound": true,
+           "command": true
+         },
+         "complete": {
+           "notification": true,
+           "sound": true,
+           "command": true
+         },
+         "error": {
+           "notification": true,
+           "sound": true,
+           "command": true
+         },
+         "question": {
+           "notification": true,
+           "sound": true,
+           "command": true
+         }
+       },
+       "suppressWhenFocused": true,
+       "suppressInterval": 5
+     }
+   }
+   ```
+
+### 配置说明
+
+- **suppressWhenFocused: true**：当 OpenCode 窗口在焦点时，完全不弹通知、不发声（你正在打字或看输出时不会被打扰）。
+- **events 过滤**：彻底关闭 user_message 和 session_started，只在重要事件（完成、出错、需要权限、提问）时触发。
+- **PowerShell 判断**：即使 command 被触发，也只处理重要事件，防止意外。
+- **suppressInterval: 5**：5 秒内相同事件只触发一次，避免重复弹窗。
 
 装完后运行：
 ```bash

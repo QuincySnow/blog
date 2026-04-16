@@ -17,9 +17,9 @@ Today I'll share the installation steps, usage tips, and real-world effects of t
 
 ## Why These Three Plugins?
 
-- **Superpowers** (obra/superpowers): Gives AI a real software engineering SOP. It automatically strengthens Planning, TDD, code review, git worktree isolation, root cause analysis, and more. Avoids "random code generation" vibe coding, making Plan more rigorous and Build more reliable.
-- **DCP (opencode-dynamic-context-pruning)**: Token-saving magic! It non-destructively prunes outdated tool outputs (duplicate reads, old ls results, etc.), easily saving 30-60% tokens per long session (sometimes removing 50k+ useless context). Especially noticeable during long Build iterations.
-- **Notificator** (mohak34/opencode-notifier + BurntToast): Implements Windows desktop Toast notifications + sound alerts in WSL. Pops up when Build completes, errors occur, or human confirmation is needed — no more staring at the terminal.
+- **Superpowers** ([obra/superpowers](https://github.com/obra/superpowers)): Gives AI a real software engineering SOP. It automatically strengthens Planning, TDD, code review, git worktree isolation, root cause analysis, and more. Avoids "random code generation" vibe coding, making Plan more rigorous and Build more reliable.
+- **DCP** ([opencode-dynamic-context-pruning](https://github.com/Opencode-DCP/opencode-dynamic-context-pruning)): Token-saving magic! It non-destructively prunes outdated tool outputs (duplicate reads, old ls results, etc.), easily saving 30-60% tokens per long session (sometimes removing 50k+ useless context). Especially noticeable during long Build iterations.
+- **Notificator** ([mohak34/opencode-notifier](https://github.com/mohak34/opencode-notifier) + BurntToast): Implements Windows desktop Toast notifications + sound alerts in WSL. Pops up when Build completes, errors occur, or human confirmation is needed — no more staring at the terminal.
 
 These three plugins are **lightweight, conflict-free, and zero cloud dependency risk** (DCP and Superpowers are fully local), perfect for the "big model for planning, small model for iteration" setup.
 
@@ -40,12 +40,73 @@ These three plugins are **lightweight, conflict-free, and zero cloud dependency 
    opencode plugin install opencode-dynamic-context-pruning@latest
    ```
 
-3. **Notificator** (with BurntToast configured):
+3. **Notificator** (requires BurntToast module):
    Add to `opencode.jsonc`:
    ```json
    "@mohak34/opencode-notifier"
    ```
-   Configure WSL-specific PowerShell popup (already handled).
+   Install BurntToast module before first use (in PowerShell):
+   ```powershell
+   Install-Module -Name BurntToast -Force -Scope CurrentUser
+   ```
+   Then configure WSL-specific PowerShell popup:
+
+   ```json
+   {
+     "notificator": {
+       "command": {
+         "enabled": true,
+         "path": "pwsh.exe",
+         "args": [
+           "-NoProfile",
+           "-Command",
+           "$event = '{event}'; if ($event -in @('permission','complete','error','question')) { New-BurntToastNotification -Text $event, '{message}' -Sound 'Default' }"
+         ]
+       },
+       "events": {
+         "user_message": {
+           "notification": false,
+           "sound": false,
+           "command": false
+         },
+         "session_started": {
+           "notification": false,
+           "sound": false,
+           "command": false
+         },
+         "permission": {
+           "notification": true,
+           "sound": true,
+           "command": true
+         },
+         "complete": {
+           "notification": true,
+           "sound": true,
+           "command": true
+         },
+         "error": {
+           "notification": true,
+           "sound": true,
+           "command": true
+         },
+         "question": {
+           "notification": true,
+           "sound": true,
+           "command": true
+         }
+       },
+       "suppressWhenFocused": true,
+       "suppressInterval": 5
+     }
+   }
+   ```
+
+### Config Explanation
+
+- **suppressWhenFocused: true**: When OpenCode window is focused, completely skip notifications and sounds (won't disturb you while typing or watching output).
+- **events filtering**: Fully disable user_message and session_started, only trigger on important events (complete, error, permission, question).
+- **PowerShell check**: Even if command is triggered, only handle important events to prevent accidents.
+- **suppressInterval: 5**: Same event only triggers once within 5 seconds, avoiding duplicate popups.
 
 Then run:
 ```bash
