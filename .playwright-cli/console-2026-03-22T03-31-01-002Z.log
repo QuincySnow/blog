@@ -1,8 +1,0 @@
-[      26ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:8080/blog/_astro/Header.0KzRHSd_.css:0
-[      28ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:8080/blog/_astro/BlogPost.BJhz_2Go.css:0
-[     107ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:8080/blog/fonts/atkinson-bold.woff:0
-[     107ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:8080/blog/fonts/atkinson-regular.woff:0
-[     221ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:8080/blog/favicon.ico:0
-[     225ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:8080/blog/favicon.svg:0
-[    3227ms] [WARNING] The resource http://localhost:8080/blog/fonts/atkinson-bold.woff was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:8080/blog/2026-03-07-linux-desktop-hardcore-guide/:0
-[    3227ms] [WARNING] The resource http://localhost:8080/blog/fonts/atkinson-regular.woff was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:8080/blog/2026-03-07-linux-desktop-hardcore-guide/:0
