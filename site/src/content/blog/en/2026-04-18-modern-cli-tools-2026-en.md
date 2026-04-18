@@ -19,44 +19,9 @@ lang: en
 
 If you're still using `ncdu`, `ls`, `cat`, `find`, `grep`, `top`, it's time to upgrade. The CLI tool ecosystem in 2026 is booming—numerous Rust/Go-powered modern tools are faster, prettier, and more user-friendly.
 
-This article focuses on **fzf** and **gdu** as core tools, covering all aspects of daily development (disk cleanup, file browsing, search, navigation, system monitoring). These tools are lightweight, fast, and beautiful—perfect for your Debian + zsh + mise environment.
+**Most recommended 8 core tools**: **fzf**, **ripgrep**, **zoxide**, **eza**, **bat**, **fd-find**, **btop**, **gdu**. These eight tools cover high-frequency daily development scenarios—install them and you'll see immediate efficiency gains.
 
-## 1. Disk Space Analysis (replacing ncdu / du)
-
-### gdu (Highly Recommended)
-
-Written in Go, faster than ncdu (especially on SSD), interactive TUI, mouse support, prettier colors, can delete files directly.
-
-```bash
-sudo apt install gdu
-gdu /home/asus
-```
-
-Blog highlight: "Faster, more modern ncdu alternative."
-
-### dust
-
-Written in Rust, treemap + percentage display, intuitive and pretty (non-interactive but beautiful output).
-
-```bash
-sudo apt install dust
-dust /home/asus
-```
-
-### duf
-
-Replaces `df`, colorful partition overview at a glance.
-
-```bash
-sudo apt install duf
-duf
-```
-
-**Recommended combo**: `duf` (overview) → `dust` (treemap) → `gdu` (interactive deletion).
-
-## 2. Fuzzy Finder (fzf series, must-have!)
-
-### fzf
+## 1. fzf (Fuzzy Finder, Must-Have!)
 
 Fuzzy find anything (history, files, processes, etc.).
 
@@ -67,7 +32,15 @@ source <(fzf --zsh)
 
 Shortcuts: Ctrl+R (history), Ctrl+T (files).
 
-### zoxide (Smart cd, fzf's best partner)
+## 2. ripgrep (Code Search)
+
+Ultra-fast code search, automatically ignores .gitignore.
+
+```bash
+sudo apt install ripgrep
+```
+
+## 3. zoxide (Smart cd)
 
 Remembers your frequently visited directories, `z proj` jumps to your project directory.
 
@@ -76,9 +49,7 @@ sudo apt install zoxide
 eval "$(zoxide init zsh)"
 ```
 
-## 3. File Listing & Browsing (replacing ls / tree)
-
-### eza (Active fork of exa, most recommended)
+## 4. eza (File Listing)
 
 Modern `ls` replacement with icons, Git status, colors, tree view.
 
@@ -88,13 +59,7 @@ alias ls='eza --icons --git'
 alias ll='eza -l --icons --git'
 ```
 
-### yazi (Modern terminal file manager)
-
-Similar to ranger but prettier, supports previewing images and videos (great for blog demos showing "file manager in terminal").
-
-## 4. File Viewing & Diff (replacing cat / diff)
-
-### bat (Highly Recommended)
+## 5. bat (File Viewing)
 
 `cat` + syntax highlighting + Git integration + paging.
 
@@ -103,17 +68,7 @@ sudo apt install bat
 alias cat='bat'
 ```
 
-### delta (Git diff powerhouse)
-
-Beautifies git diff, side-by-side comparison, color highlighting.
-
-```bash
-cargo install git-delta
-```
-
-## 5. Search & Find (replacing find / grep)
-
-### fd (Replacing find)
+## 6. fd-find (File Finding)
 
 Faster, simpler, supports .gitignore.
 
@@ -121,19 +76,7 @@ Faster, simpler, supports .gitignore.
 sudo apt install fd-find
 ```
 
-### ripgrep (rg) (Replacing grep)
-
-Ultra-fast code search, automatically ignores .gitignore.
-
-```bash
-sudo apt install ripgrep
-```
-
-**fzf + fd + rg + bat** combo is unstoppable: fuzzy finding + fast search + beautiful preview.
-
-## 6. System Monitoring (replacing top / htop)
-
-### btop
+## 7. btop (System Monitoring)
 
 Prettier resource monitoring (CPU, memory, disk, network), theme support.
 
@@ -141,35 +84,29 @@ Prettier resource monitoring (CPU, memory, disk, network), theme support.
 sudo apt install btop
 ```
 
-### fastfetch or neofetch (System info display)
+## 8. gdu (Disk Space Analysis)
+
+Written in Go, faster than ncdu (especially on SSD), interactive TUI, mouse support, prettier colors, can delete files directly.
 
 ```bash
-sudo apt install fastfetch
+sudo apt install gdu
+gdu /home/asus
 ```
 
-## 7. Other Useful Tools (Productivity Boosters)
+## The Ultimate Combo: fzf + fd + rg + bat
 
-### tealdeer (tldr)
-
-Simplifies man pages, shows practical examples only.
+These four tools together are unstoppable: fuzzy finding + fast search + beautiful preview.
 
 ```bash
-sudo apt install tealdeer
-```
-
-### starship
-
-Cross-shell beautiful prompt (recommended for zsh).
-
-```bash
-curl -sS https://starship.rs/install.sh | sh
+# Use fzf to fuzzy search files, then preview with bat
+fzf --preview 'bat --style=numbers --color=always {}'
 ```
 
 ## One-Click Install Recommendation
 
 ```bash
 sudo apt update
-sudo apt install -y gdu dust duf eza bat fd-find ripgrep fzf zoxide btop tealdeer
+sudo apt install -y gdu eza bat fd-find ripgrep fzf zoxide btop
 ```
 
 Then add to your `~/.zshrc`:
@@ -183,7 +120,8 @@ eval "$(zoxide init zsh)"
 
 # Alias examples
 alias ls='eza --icons --git'
+alias ll='eza -l --icons --git'
 alias cat='bat'
 ```
 
-After installing these tools, your terminal will be noticeably more modern and efficient!
+After installing these 8 tools, your terminal will be noticeably more modern and efficient!
