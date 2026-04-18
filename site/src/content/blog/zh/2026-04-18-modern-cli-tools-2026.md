@@ -140,7 +140,7 @@ sudo apt install gdu
 gdu /home/asus
 ```
 
-**界面操作**：↑↓ 移动，Enter 进入目录，d 删除，q 退出。
+**界面操作**：↑↓ 移动，Enter 进入目录，← 返回上级，d 删除，q 退出。
 
 ## fzf + fd + rg + bat 组合的无敌用法
 

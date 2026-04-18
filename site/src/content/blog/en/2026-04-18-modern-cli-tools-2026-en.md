@@ -129,7 +129,7 @@ Prettier resource monitoring (CPU, memory, disk, network), theme support.
 sudo apt install btop
 ```
 
-**Controls**: Arrow keys/mouse to switch panels, k to kill process, q to quit.
+**Controls**: ↑↓ to move, Enter to enter directory, ← to go back, k to kill process, q to quit.
 
 ## 8. gdu (Disk Space Analysis)
 
