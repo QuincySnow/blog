@@ -89,6 +89,28 @@ description: Conventions and structure for this Astro blog (QuincySnow). Use whe
 - **站内互链**：在英文版正文中引用中文版时，使用**相对路径**（同目录 slug），例如 `[Chinese version](slug-without-en)`，以便在 `base: '/blog'` 下正确解析。
 - **日期与 UI**：站点根据当前界面语言（中/英）显示日期格式（`dateLocale` 在 i18n 中配置）；列表与文章页的日期会随语言切换更新。
 
+## 文章内部链接
+
+在 Markdown 文章正文中引用站内其他文章时，应使用**相对 slug 格式**（不带 base 前缀）：
+
+- **中文文章引用中文文章**：`[Fan Control 使用指南](2026-04-19-fan-control-ddu-guide)`
+- **英文文章引用英文文章**：`[Fan Control Guide](2026-04-19-fan-control-ddu-guide-en)`
+- **英文文章引用中文文章**：使用 slug（不含 `-en` 后缀），如 `[中文版](2026-04-19-fan-control-ddu-guide)`
+
+**禁止使用** 带 base 的绝对路径，如 `/blog/...` 或 `/blog/zh/...`，这会导致在子路径部署下链接失效。
+
+**错误示例**：
+```markdown
+[DDU](/blog/zh/2026-04-19-fan-control-ddu-guide/)  ❌
+[DDU](/blog/en/2026-04-19-fan-control-ddu-guide-en/)  ❌
+```
+
+**正确示例**：
+```markdown
+[DDU](2026-04-19-fan-control-ddu-guide)  ✅
+[DDU](2026-04-19-fan-control-ddu-guide-en)  ✅
+```
+
 ## 布局与样式
 
 - 通用布局：**`site/src/layouts/BlogPost.astro`**（文章与关于页共用）；含代码块顶栏、TOC、全局样式等。
@@ -109,6 +131,7 @@ description: Conventions and structure for this Astro blog (QuincySnow). Use whe
 - [ ] 新 head 资源（favicon、字体等）使用 withBase
 - [ ] 新图片/动图放入 `site/public/images/` 或 `site/public/gif/`，引用时用 `withBase('/images/...')` 或 `withBase('/gif/...')`
 - [ ] 新文章：中文稿加 `lang: zh`；英文稿用 `-en.md` 且加 `lang: en`；正文内跨语言引用用相对 slug
+- [ ] 文章内部链接使用相对 slug 格式（如 `2026-04-19-fan-control-ddu-guide`），不写 `/blog/...` 或 `/blog/zh/...`
 - [ ] 关于页新增项目：在 `projects` 与 i18n `about` 中补全，避免在模板中使用 `Record<string, string>` 类型断言
 - [ ] 构建通过：`cd site && bun run build`（必须用 Bun，不要用 npm run build）
 
