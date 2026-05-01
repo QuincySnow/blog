@@ -89,6 +89,7 @@ lang: zh
 1. [Zygisk Next（推荐）](https://github.com/Dr-TSNG/ZygiskNext) / [ReZygisk](https://github.com/PerformanC/ReZygisk) / [NeoZygisk](https://github.com/JingMatrix/NeoZygisk)
 2. [Play Integrity Fork](https://github.com/osm0sis/PlayIntegrityFork)
 3. [microG](https://microg.org/)（两个组件）
+4. [SUSFS4KSU](https://github.com/sidex15/susfs4ksu-module)
 
 ### 步骤 1：安装 Zygisk 变体
 
