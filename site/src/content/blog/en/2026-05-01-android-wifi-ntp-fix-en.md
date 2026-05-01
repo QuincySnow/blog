@@ -62,7 +62,7 @@ fastboot version
 You only need to follow this step if you connect your Android device in Fastboot mode and Windows doesn't recognize it.
 
 1. **Download the Driver**
-   
+
    Download the [Google USB Driver](https://developer.android.com/studio/run/win-usb). Click "Download the Google USB Driver ZIP file (ZIP)". You don't need to follow "Get it from the Android SDK Manager" unless you have Android Studio installed.
 
 2. **Extract the downloaded zip file**
@@ -78,5 +78,3 @@ You only need to follow this step if you connect your Android device in Fastboot
    - Select `android_winusb.inf` and follow the prompts (ignore any unsigned driver warnings if necessary)
 
 You're all set!
-
-**Keywords**: Windows 10, Windows 11, Android, ADB, Fastboot, Google USB Driver, Platform Tools, winget, device driver, manual installation

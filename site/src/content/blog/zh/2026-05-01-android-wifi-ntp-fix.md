@@ -78,5 +78,3 @@ fastboot version
    - 选择 `android_winusb.inf` 并按照提示完成安装（如果遇到未签名驱动警告请忽略）
 
 安装完成！
-
-**关键词**：Windows 10, Windows 11, Android, ADB, Fastboot, Google USB Driver, Platform Tools, winget, 设备驱动, 手动安装
