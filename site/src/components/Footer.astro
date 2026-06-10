@@ -1,0 +1,25 @@
+---
+const today = new Date();
+---
+
+<footer>
+	&copy; {today.getFullYear()} QuincySnow. <span data-i18n="footer.copyright">All rights reserved.</span>
+</footer>
+<style is:global>
+	footer {
+		flex-shrink: 0;
+		margin: 2rem 0 0;
+		padding: 1.25rem 1em;
+		min-height: 2.5rem;
+		font-size: 0.8125rem;
+		line-height: 1.3;
+		background-color: rgb(var(--bg));
+		color: rgb(var(--text));
+		opacity: 0.78;
+		text-align: center;
+		transition: background-color var(--duration-normal) var(--ease-out), color var(--duration-normal) var(--ease-out), opacity var(--duration-fast) var(--ease-out);
+	}
+	footer:hover {
+		opacity: 1;
+	}
+</style>

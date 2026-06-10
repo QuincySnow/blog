@@ -1,0 +1,146 @@
+---
+import { getImage, Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+import Header from '../../components/Header.astro';
+import { withBase } from '../../consts';
+import { DEFAULT_LANG, i18n } from '../../i18n';
+
+const meta = i18n[DEFAULT_LANG].posts;
+
+const allPosts = await getCollection('blog');
+const posts = allPosts
+	.filter((p) => !p.data.draft)
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const searchIndex = posts.map((p) => ({
+	id: p.id,
+	title: p.data.title,
+	tags: p.data.tags ?? [],
+	pubDate: p.data.pubDate.toISOString(),
+	lang: p.data.lang ?? 'zh',
+}));
+
+const firstHero = posts[0]?.data?.heroImage;
+const firstImageSrc = firstHero ? getImage({ src: firstHero, width: 720, height: 360 }).src : null;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<BaseHead
+			title={meta.documentTitle}
+			description={meta.description}
+			preloadImage={firstImageSrc ? withBase(firstImageSrc) : undefined}
+		/>
+		<style>
+			.blog-list {
+				list-style: none;
+				margin: 0;
+				padding: 0;
+				display: flex;
+				flex-direction: column;
+				gap: 2.5rem;
+			}
+			.blog-list li {
+				margin: 0;
+				padding: 0;
+			}
+			.blog-list a {
+				display: block;
+				text-decoration: none;
+				padding: 1.5rem 0;
+				border-bottom: 1px solid rgb(var(--border));
+			}
+			.blog-list a:hover .title,
+			.blog-list a:hover .date,
+			.blog-list a:hover .tags {
+				color: var(--accent);
+			}
+			.blog-list .title {
+				margin: 0 0 0.5rem;
+				font-size: 1.35rem;
+				line-height: 1.4;
+				color: rgb(var(--text-heading));
+				transition: color var(--duration-fast) var(--ease-out);
+			}
+			.blog-list .date {
+				margin: 0;
+				font-size: 0.9rem;
+				color: rgb(var(--text));
+				opacity: 0.85;
+				transition: color var(--duration-fast) var(--ease-out);
+			}
+			.blog-list .tags {
+				margin: 0.5rem 0 0;
+				font-size: 0.85rem;
+				color: rgb(var(--text));
+				opacity: 0.75;
+				transition: color var(--duration-fast) var(--ease-out);
+			}
+			.blog-list .tag {
+				display: inline-block;
+				margin-right: 0.5rem;
+			}
+			.blog-list img {
+				margin-bottom: 0.75rem;
+				border-radius: 12px;
+			}
+			.blog-page-title {
+				margin: 0 0 1.5rem;
+				font-size: 1.5rem;
+				color: rgb(var(--text-heading));
+			}
+			.post-lang-en { display: none; }
+			[lang="zh-CN"] .post-lang-zh { display: block; }
+			[lang="zh-CN"] .post-lang-en { display: none; }
+			[lang="en"] .post-lang-zh { display: none; }
+			[lang="en"] .post-lang-en { display: block; }
+		</style>
+	</head>
+	<body>
+		<Header searchIndex={searchIndex} />
+		<main class="animate-fade-in">
+			<h1 class="blog-page-title" data-i18n="nav.posts">博客</h1>
+			<section aria-label="Article list">
+				<ul class="blog-list animate-stagger-children">
+					{
+						posts.map((post, index) => {
+							const postLang = post.data.lang ?? 'zh';
+							const isFirstImage = index === 0 && post.data.heroImage;
+							return (
+							<li class:list={['post-lang-' + postLang]} data-post-lang={postLang}>
+								<a href={withBase(`/posts/${post.id}/`)} class="hover-lift">
+									{post.data.heroImage && (
+										<Image
+											width={720}
+											height={360}
+											src={post.data.heroImage}
+											alt=""
+											loading={isFirstImage ? 'eager' : 'lazy'}
+											fetchPriority={isFirstImage ? 'high' : undefined}
+											decoding={isFirstImage ? 'async' : undefined}
+										/>
+									)}
+									<h2 class="title">{post.data.title}</h2>
+									<p class="date">
+										<FormattedDate date={post.data.pubDate} />
+									</p>
+									{post.data.tags && post.data.tags.length > 0 && (
+										<p class="tags">
+											{post.data.tags.slice(0, 5).map((t) => (
+												<span class="tag">{t}</span>
+											))}
+										</p>
+									)}
+								</a>
+							</li>
+						); })
+					}
+				</ul>
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>

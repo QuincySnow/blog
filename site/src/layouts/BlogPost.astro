@@ -1,0 +1,678 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import FormattedDate from '../components/FormattedDate.astro';
+import Header from '../components/Header.astro';
+import { i18n } from '../i18n';
+
+type Props = CollectionEntry<'blog'>['data'] & {
+	dataI18nTitle?: string;
+};
+
+const { title, description, pubDate, updatedDate, heroImage, tags, dataI18nTitle } = Astro.props;
+import { withBase } from '../consts';
+
+const searchIndex = (await getCollection('blog'))
+	.filter((p) => !p.data.draft)
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+	.map((p) => ({
+		id: p.id,
+		title: p.data.title,
+		tags: p.data.tags ?? [],
+		pubDate: p.data.pubDate.toISOString(),
+	}));
+---
+
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} />
+		<style is:global>
+			main {
+				flex: 1 0 auto;
+				width: 100%;
+				max-width: 100%;
+				margin: 0;
+				padding: 0;
+			}
+			.hero-image {
+				width: 100%;
+			}
+			.hero-image img {
+				display: block;
+				margin: 0 auto;
+				border-radius: 12px;
+				box-shadow: var(--box-shadow);
+			}
+			.post-body {
+				display: flex;
+				gap: 2.25rem;
+				align-items: flex-start;
+				width: 100%;
+				max-width: 1320px;
+				margin: 0 auto;
+				padding: 0 2rem 1.5rem;
+				box-sizing: border-box;
+			}
+			.post-content {
+				flex: 0 1 980px;
+				max-width: 980px;
+				min-width: 0;
+			}
+			.prose {
+				width: 100%;
+				max-width: 100%;
+				margin: 0;
+				padding: 2rem 0 1.5rem;
+				color: rgb(var(--text));
+				line-height: 1.8;
+				font-size: 1.0625rem;
+				letter-spacing: 0.01em;
+			}
+			.prose-content p {
+				margin-bottom: 1.5em;
+				line-height: 1.85;
+			}
+			.prose-content p:last-child {
+				margin-bottom: 0;
+			}
+			.prose-content h2 {
+				margin-top: 2.25em;
+				margin-bottom: 0.6em;
+				padding-bottom: 0.35em;
+				font-size: 1.6rem;
+				font-weight: 700;
+				color: rgb(var(--text-heading));
+				border-bottom: 1px solid rgb(var(--border));
+				line-height: 1.3;
+			}
+			.prose-content h2:first-child {
+				margin-top: 0;
+			}
+			.prose-content h3 {
+				margin-top: 1.75em;
+				margin-bottom: 0.5em;
+				font-size: 1.35rem;
+				font-weight: 600;
+				color: rgb(var(--text-heading));
+				line-height: 1.35;
+			}
+			.prose-content h4 {
+				margin-top: 1.5em;
+				margin-bottom: 0.4em;
+				font-size: 1.15rem;
+				font-weight: 600;
+				color: rgb(var(--text-heading));
+				line-height: 1.4;
+			}
+			.prose-content a {
+				color: var(--accent);
+				text-decoration: none;
+				position: relative;
+				border-bottom: 1px solid transparent;
+				transition: color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+			}
+			.prose-content a::after {
+				content: '';
+				position: absolute;
+				left: 0;
+				bottom: 0;
+				height: 1px;
+				width: 100%;
+				background: var(--accent);
+				transform: scaleX(0);
+				transform-origin: right;
+				transition: transform var(--duration-normal) var(--ease-out);
+			}
+			.prose-content a:hover::after {
+				transform-origin: left;
+				transform: scaleX(1);
+			}
+			.prose-content a:hover {
+				border-bottom-color: transparent;
+			}
+			.prose-content ul,
+			.prose-content ol {
+				margin: 1.25em 0;
+				padding-left: 1.5em;
+			}
+			.prose-content li {
+				margin-bottom: 0.4em;
+				line-height: 1.75;
+			}
+			.prose-content ul {
+				list-style-type: disc;
+			}
+			.prose-content ul ul {
+				list-style-type: circle;
+				margin-top: 0.4em;
+				margin-bottom: 0.4em;
+			}
+			.prose-content ol {
+				list-style-type: decimal;
+			}
+			.prose-content blockquote {
+				margin: 1.5em 0;
+				padding: 0.85em 1.25em;
+				border-left: 4px solid var(--accent);
+				background: rgba(var(--gray-light), 0.5);
+				border-radius: 0 8px 8px 0;
+				font-size: 1.05em;
+				font-style: italic;
+				color: rgb(var(--text-heading));
+				line-height: 1.7;
+			}
+			[data-theme="dark"] .prose-content blockquote {
+				background: rgba(255, 255, 255, 0.05);
+			}
+			.prose-content hr {
+				margin: 2em 0;
+				border: none;
+				border-top: 1px solid rgb(var(--border));
+			}
+			.prose-content code {
+				padding: 0.2em 0.45em;
+				font-size: 0.9em;
+				background: rgb(var(--gray-light));
+				border-radius: 6px;
+				font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+			}
+			[data-theme="dark"] .prose-content code {
+				background: rgba(255, 255, 255, 0.1);
+			}
+			.prose-content img {
+				border-radius: 10px;
+				box-shadow: 0 2px 12px rgba(var(--text-heading), 0.08);
+			}
+			[data-theme="dark"] .prose-content img {
+				box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+			}
+			.prose-content strong {
+				font-weight: 700;
+				color: rgb(var(--text-heading));
+			}
+			.prose-content table {
+				width: 100%;
+				margin: 1.5em 0;
+				border-collapse: collapse;
+				font-size: 0.95em;
+			}
+			.prose-content th,
+			.prose-content td {
+				padding: 0.5em 0.75em;
+				border: 1px solid rgb(var(--border));
+				text-align: left;
+			}
+			.prose-content th {
+				background: rgb(var(--gray-light));
+				font-weight: 600;
+				color: rgb(var(--text-heading));
+			}
+			[data-theme="dark"] .prose-content th {
+				background: rgba(255, 255, 255, 0.08);
+			}
+			.prose-content tbody tr:nth-child(even) {
+				background: rgba(var(--gray-light), 0.35);
+			}
+			[data-theme="dark"] .prose-content tbody tr:nth-child(even) {
+				background: rgba(255, 255, 255, 0.03);
+			}
+			.toc-sidebar {
+				width: 300px;
+				flex: 0 0 300px;
+				margin-left: auto;
+				position: sticky;
+				top: 1.5rem;
+				padding: 1rem 0 0 1rem;
+				border-left: 1px solid rgb(var(--border));
+			}
+			@media (max-width: 1280px) {
+				.post-body {
+					max-width: 1200px;
+					margin: 0 auto;
+					padding: 0 1.5rem 1.5rem;
+				}
+				.post-content {
+					flex: 1 1 0;
+					max-width: 100%;
+				}
+				.toc-sidebar {
+					width: min(280px, 24%);
+					flex: 0 0 min(280px, 24%);
+					margin-left: 0;
+				}
+			}
+			.toc-title {
+				font-size: 0.9rem;
+				font-weight: 700;
+				color: rgb(var(--text-heading));
+				margin: 0 0 0.75rem;
+			}
+			.toc-nav {
+				font-size: 0.85rem;
+				line-height: 1.5;
+			}
+			.toc-nav .toc-list {
+				list-style: none;
+				margin: 0;
+				padding: 0;
+			}
+			.toc-nav a {
+				display: block;
+				padding: 0.35rem 0.5rem 0.35rem 0.25rem;
+				margin: 0 0 0 -0.25rem;
+				color: rgb(var(--text));
+				text-decoration: none;
+				opacity: 0.85;
+				border-radius: var(--radius-sm);
+				border-left: 3px solid transparent;
+				transition: color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out), border-left-color var(--duration-fast) var(--ease-out);
+			}
+			.toc-nav a:hover {
+				color: var(--accent);
+				opacity: 1;
+			}
+			.toc-sidebar .toc-nav a.active {
+				background-color: rgba(35, 55, 255, 0.1);
+				color: var(--accent);
+				opacity: 1;
+				border-left-color: var(--accent);
+				font-weight: 600;
+			}
+			[data-theme="dark"] .toc-sidebar .toc-nav a.active {
+				background-color: rgba(99, 120, 255, 0.18);
+				border-left-color: var(--accent);
+			}
+			.toc-nav .toc-h3 a {
+				padding-left: 1rem;
+			}
+			.toc-nav .toc-h4 a {
+				padding-left: 1.5rem;
+			}
+			@media (max-width: 900px) {
+				.toc-sidebar {
+					display: none;
+				}
+			}
+			.title {
+				margin-bottom: 1.5em;
+				padding: 0.5em 0 1.25em;
+				text-align: center;
+				line-height: 1.25;
+			}
+			.title h1 {
+				margin: 0 0 0.4em 0;
+				font-size: 2rem;
+				font-weight: 700;
+				letter-spacing: -0.02em;
+				color: rgb(var(--text-heading));
+			}
+			.title hr {
+				margin: 1.25em auto 0;
+				width: 3rem;
+				border: none;
+				border-top: 3px solid var(--accent);
+				opacity: 0.8;
+			}
+			/* 正文中与布局标题重复的第一个 h1 仅做视觉隐藏，保留语义由布局提供唯一 h1 */
+			.prose-content > h1:first-child {
+				display: none;
+			}
+			.date {
+				margin-bottom: 0.5em;
+				color: rgb(var(--gray));
+			}
+			.last-updated-on {
+				font-style: italic;
+			}
+			.tags {
+				margin-top: 0.5em;
+				font-size: 0.9rem;
+				color: rgb(var(--gray));
+			}
+			.tag {
+				display: inline-block;
+				margin-right: 0.5rem;
+			}
+			.tag-link {
+				color: var(--accent);
+				text-decoration: none;
+				padding: 0.2em 0.5em;
+				border-radius: 6px;
+				transition: color 0.2s ease, background 0.2s ease;
+			}
+			.tag-link:hover {
+				background: rgba(35, 55, 255, 0.1);
+			}
+			[data-theme="dark"] .tag-link:hover {
+				background: rgba(33, 55, 255, 0.2);
+			}
+			.prose .code-block-outer {
+				margin: 1em 0;
+				border-radius: 10px;
+				overflow: hidden;
+				border: 1px solid rgba(0, 0, 0, 0.15);
+				background: #282c34;
+				transition: box-shadow 0.25s ease, transform 0.22s ease;
+			}
+			.prose .code-block-outer:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+			}
+			[data-theme="dark"] .prose .code-block-outer {
+				border-color: rgba(255, 255, 255, 0.1);
+			}
+			[data-theme="dark"] .prose .code-block-outer:hover {
+				box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+			}
+			.prose .code-block-header {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				padding: 0.45rem 0.85rem;
+				background: rgba(0, 0, 0, 0.25);
+				border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+				gap: 0.5rem;
+			}
+			.prose .code-block-lang {
+				font-size: 0.75rem;
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 0.02em;
+				color: rgba(255, 255, 255, 0.7);
+			}
+			.prose .code-block-outer pre {
+				margin: 0;
+				padding: 1rem 1.25rem;
+				border-radius: 0;
+				overflow-x: auto;
+				background: #282c34;
+				color: #abb2bf;
+			}
+			.prose .code-block-outer pre code {
+				background: transparent;
+				color: inherit;
+				padding: 0;
+			}
+			@keyframes copy-pulse {
+				0% { transform: scale(1); }
+				50% { transform: scale(1.12); }
+				100% { transform: scale(1); }
+			}
+			.prose .code-copy-btn {
+				width: 2rem;
+				height: 2rem;
+				min-width: 2rem;
+				min-height: 2rem;
+				padding: 0;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				color: rgba(255, 255, 255, 0.7);
+				background: transparent;
+				border: 1px solid rgba(255, 255, 255, 0.2);
+				border-radius: 6px;
+				cursor: pointer;
+				transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+			}
+			.prose .code-copy-btn:hover {
+				background: rgba(255, 255, 255, 0.12);
+				color: #fff;
+				border-color: rgba(255, 255, 255, 0.35);
+			}
+			.prose .code-copy-btn.copied {
+				background: var(--accent);
+				color: #fff;
+				border-color: var(--accent);
+				animation: copy-pulse 0.35s ease;
+			}
+			@media (prefers-reduced-motion: reduce) {
+				.prose .code-copy-btn.copied { animation: none; }
+			}
+			.prose .code-copy-btn svg {
+				width: 1rem;
+				height: 1rem;
+				display: block;
+				flex-shrink: 0;
+				stroke: currentColor;
+				fill: none;
+			}
+			.prose .code-copy-btn .copy-char {
+				display: none;
+			}
+		</style>
+	</head>
+
+	<body>
+		<Header searchIndex={searchIndex} />
+		<main class="animate-fade-in">
+			<article>
+				<div class="hero-image">
+					{heroImage && (
+						<Image
+							width={1020}
+							height={510}
+							src={heroImage}
+							alt=""
+							loading="eager"
+							fetchPriority="high"
+						/>
+					)}
+				</div>
+				<div class="post-body">
+					<div class="post-content">
+						<div class="prose">
+							<div class="title animate-fade-in-delay">
+								<div class="date">
+									<FormattedDate date={pubDate} />
+									{
+										updatedDate && (
+											<div class="last-updated-on">
+												<span data-i18n="post.lastUpdated">更新于</span> <FormattedDate date={updatedDate} />
+											</div>
+										)
+									}
+								</div>
+								<h1 data-i18n={dataI18nTitle}>{title}</h1>
+								{tags && tags.length > 0 && (
+									<div class="tags">
+										{tags.map((t) => (
+											<a href={withBase('/tags/' + encodeURIComponent(t))} class="tag tag-link">{t}</a>
+										))}
+									</div>
+								)}
+								<hr />
+							</div>
+							<div class="prose-content">
+								<slot />
+							</div>
+						</div>
+					</div>
+					<aside class="toc-sidebar" aria-label="Table of contents">
+						<h2 class="toc-title" data-i18n="post.tocTitle">文章目录</h2>
+						<nav class="toc-nav" id="toc-nav"></nav>
+					</aside>
+				</div>
+			</article>
+		</main>
+		<Footer />
+		<script define:vars={{ i18n }}>
+			(function () {
+				function getLang() {
+					var s = localStorage.getItem('lang');
+					return (s === 'en' || s === 'zh') ? s : 'zh';
+				}
+				function makeSvgCopy() {
+					var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+					svg.setAttribute('viewBox', '0 0 24 24');
+					svg.setAttribute('fill', 'none');
+					svg.setAttribute('stroke', 'currentColor');
+					svg.setAttribute('stroke-width', '2');
+					svg.setAttribute('stroke-linecap', 'round');
+					svg.setAttribute('stroke-linejoin', 'round');
+					var r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+					r.setAttribute('x', '9'); r.setAttribute('y', '9'); r.setAttribute('width', '13'); r.setAttribute('height', '13'); r.setAttribute('rx', '2');
+					var p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+					p.setAttribute('d', 'M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1');
+					p.setAttribute('stroke', 'currentColor');
+					svg.appendChild(r); svg.appendChild(p);
+					return svg;
+				}
+				function makeSvgCheck() {
+					var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+					svg.setAttribute('viewBox', '0 0 24 24');
+					svg.setAttribute('fill', 'none');
+					svg.setAttribute('stroke', 'currentColor');
+					svg.setAttribute('stroke-width', '2');
+					svg.setAttribute('stroke-linecap', 'round');
+					svg.setAttribute('stroke-linejoin', 'round');
+					var pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+					pl.setAttribute('points', '20 6 9 17 4 12');
+					svg.appendChild(pl);
+					return svg;
+				}
+				function getLanguageLabel(codeEl) {
+					if (!codeEl || !codeEl.className) return 'PLAINTEXT';
+					var match = codeEl.className.match(/\blanguage-(\w+)\b/);
+					return match ? match[1].toUpperCase() : 'PLAINTEXT';
+				}
+				function run() {
+					var lang = getLang();
+					var copyText = i18n[lang].code.copy;
+					document.querySelectorAll('.prose pre').forEach(function (pre) {
+						if (pre.closest('.code-block-outer')) return;
+						var code = pre.querySelector('code');
+						var text = code ? code.textContent : pre.textContent;
+						var wrapper = document.createElement('div');
+						wrapper.className = 'code-block-outer';
+						pre.parentNode.insertBefore(wrapper, pre);
+						var header = document.createElement('div');
+						header.className = 'code-block-header';
+						var langSpan = document.createElement('span');
+						langSpan.className = 'code-block-lang';
+						langSpan.textContent = getLanguageLabel(code);
+						var btn = document.createElement('button');
+						btn.type = 'button';
+						btn.className = 'code-copy-btn';
+						btn.setAttribute('aria-label', copyText);
+						var span = document.createElement('span');
+						span.className = 'copy-char';
+						span.setAttribute('aria-hidden', 'true');
+						span.textContent = '\u2398';
+						btn.appendChild(span);
+						btn.appendChild(makeSvgCopy());
+						btn.addEventListener('click', function () {
+							if (!text) return;
+							navigator.clipboard.writeText(text).then(function () {
+								btn.replaceChildren(makeSvgCheck());
+								btn.classList.add('copied');
+								setTimeout(function () {
+									btn.replaceChildren(span.cloneNode(true), makeSvgCopy());
+									btn.classList.remove('copied');
+								}, 1500);
+							});
+						});
+						header.appendChild(langSpan);
+						header.appendChild(btn);
+						wrapper.appendChild(header);
+						wrapper.appendChild(pre);
+					});
+				}
+				function slugify(text) {
+					return text.trim().toLowerCase()
+						.replace(/\s+/g, '-')
+						.replace(/[^\w\u4e00-\u9fff-]/g, '')
+						.replace(/-+/g, '-')
+						.replace(/^-|-$/g, '') || 'section';
+				}
+				function buildToc() {
+					var nav = document.getElementById('toc-nav');
+					if (!nav) return;
+					var content = document.querySelector('.prose-content');
+					if (!content) return;
+					var headings = content.querySelectorAll('h2, h3, h4');
+					if (headings.length === 0) return;
+					var ul = document.createElement('ul');
+					ul.className = 'toc-list';
+					var idToLink = {};
+					var usedIds = {};
+					headings.forEach(function (h) {
+						var baseId = h.id || slugify(h.textContent);
+						var id = baseId;
+						var n = 0;
+						while (usedIds[id]) { n++; id = baseId + '-' + n; }
+						usedIds[id] = true;
+						h.id = id;
+						var li = document.createElement('li');
+						li.className = 'toc-' + h.tagName.toLowerCase();
+						var a = document.createElement('a');
+						a.href = '#' + id;
+						a.textContent = h.textContent.trim();
+						a.setAttribute('data-toc-id', id);
+						li.appendChild(a);
+						ul.appendChild(li);
+						idToLink[id] = a;
+					});
+					nav.appendChild(ul);
+					function setActive(id) {
+						Object.keys(idToLink).forEach(function (k) {
+							var link = idToLink[k];
+							if (k === id) {
+								link.classList.add('active');
+								link.setAttribute('aria-current', 'location');
+							} else {
+								link.classList.remove('active');
+								link.removeAttribute('aria-current');
+							}
+						});
+					}
+					function updateActiveFromScroll() {
+						var topOffset = 120;
+						var current = null;
+						for (var i = headings.length - 1; i >= 0; i--) {
+							var h = headings[i];
+							if (h.getBoundingClientRect().top <= topOffset) {
+								current = h.id;
+								break;
+							}
+						}
+						if (current && idToLink[current]) setActive(current);
+						else if (headings[0] && idToLink[headings[0].id]) setActive(headings[0].id);
+					}
+					// 节流：滚动中最多每 80ms 更新一次；并在滚动停止后 120ms 再更新一次，保证快速跳转后高亮正确
+					var lastRun = 0;
+					var scrollTimeout = null;
+					var throttleMs = 80;
+					var trailingMs = 120;
+					function onScroll() {
+						var now = Date.now();
+						if (now - lastRun >= throttleMs) {
+							lastRun = now;
+							updateActiveFromScroll();
+						}
+						if (scrollTimeout) clearTimeout(scrollTimeout);
+						scrollTimeout = setTimeout(function () {
+							scrollTimeout = null;
+							updateActiveFromScroll();
+						}, trailingMs);
+					}
+					window.addEventListener('scroll', onScroll, { passive: true });
+					requestAnimationFrame(function () {
+						requestAnimationFrame(updateActiveFromScroll);
+					});
+				}
+				function runAll() {
+					run();
+					buildToc();
+				}
+				if (document.readyState === 'loading') {
+					document.addEventListener('DOMContentLoaded', runAll);
+				} else {
+					runAll();
+				}
+			})();
+		</script>
+	</body>
+</html>

@@ -1,0 +1,153 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+import Header from '../../components/Header.astro';
+import { withBase } from '../../consts';
+import { DEFAULT_LANG, i18n } from '../../i18n';
+
+export async function getStaticPaths() {
+	const allPosts = await getCollection('blog');
+	const tagSet = new Set<string>();
+	for (const post of allPosts) {
+		if (post.data.draft) continue;
+		for (const t of post.data.tags ?? []) tagSet.add(t);
+	}
+	return Array.from(tagSet).map((tag) => ({ params: { tag } }));
+}
+
+const { tag } = Astro.params;
+if (!tag) return Astro.redirect(withBase('/tags/'));
+
+const allPosts = await getCollection('blog');
+const posts = allPosts
+	.filter((p) => !p.data.draft && (p.data.tags ?? []).includes(tag))
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+const searchIndex = allPosts
+	.filter((p) => !p.data.draft)
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+	.map((p) => ({
+		id: p.id,
+		title: p.data.title,
+		tags: p.data.tags ?? [],
+		pubDate: p.data.pubDate.toISOString(),
+		lang: p.data.lang ?? 'zh',
+	}));
+
+const meta = i18n[DEFAULT_LANG].tags;
+const titleSuffix = DEFAULT_LANG === 'zh' ? `标签：${tag}` : `Tag: ${tag}`;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<BaseHead title={`${titleSuffix} - ${meta.documentTitle}`} description={meta.description} />
+		<style>
+			.tag-page-title {
+				margin: 0 0 0.5rem;
+				font-size: 1.5rem;
+				color: rgb(var(--text-heading));
+			}
+			.tag-page-meta {
+				margin: 0 0 1.5rem;
+				font-size: 0.95rem;
+				color: rgb(var(--gray));
+			}
+			.tag-posts-list {
+				list-style: none;
+				margin: 0;
+				padding: 0;
+				display: flex;
+				flex-direction: column;
+				gap: 2rem;
+			}
+			.tag-posts-list li {
+				margin: 0;
+				padding: 0;
+			}
+			.tag-posts-list a {
+				display: block;
+				text-decoration: none;
+				padding: 1rem 0;
+				border-bottom: 1px solid rgb(var(--border));
+				transition: color 0.2s ease, transform 0.22s ease, box-shadow 0.22s ease;
+			}
+			.tag-posts-list a:hover {
+				color: var(--accent);
+			}
+			.tag-posts-list a:hover .item-title,
+			.tag-posts-list a:hover .item-date {
+				color: var(--accent);
+			}
+			.item-title {
+				margin: 0 0 0.35rem;
+				font-size: 1.2rem;
+				line-height: 1.4;
+				color: rgb(var(--text-heading));
+			}
+			.item-date {
+				margin: 0;
+				font-size: 0.88rem;
+				color: rgb(var(--text));
+				opacity: 0.85;
+			}
+			.tag-posts-list img {
+				margin-bottom: 0.5rem;
+				border-radius: 10px;
+			}
+			.back-link {
+				display: inline-block;
+				margin-bottom: 1rem;
+				font-size: 0.9rem;
+				color: var(--accent);
+				text-decoration: none;
+			}
+			.back-link:hover {
+				text-decoration: underline;
+			}
+			.post-lang-en { display: none; }
+			[lang="zh-CN"] .post-lang-zh { display: block; }
+			[lang="zh-CN"] .post-lang-en { display: none; }
+			[lang="en"] .post-lang-zh { display: none; }
+			[lang="en"] .post-lang-en { display: block; }
+		</style>
+	</head>
+	<body>
+		<Header searchIndex={searchIndex} />
+		<main class="animate-fade-in">
+			<a href={withBase('/tags/')} class="back-link hover-back" data-i18n="tags.back">← 全部标签</a>
+			<h1 class="tag-page-title">{tag}</h1>
+			<p class="tag-page-meta">
+				{posts.length} <span data-i18n="tags.postCountSuffix">篇文章</span>
+			</p>
+			{posts.length > 0 ? (
+				<ul class="tag-posts-list animate-stagger-children">
+					{
+						posts.map((post) => {
+							const postLang = post.data.lang ?? 'zh';
+							return (
+								<li class:list={['post-lang-' + postLang]} data-post-lang={postLang}>
+									<a href={withBase(`/posts/${post.id}/`)} class="hover-lift">
+										{post.data.heroImage && (
+											<Image width={640} height={320} src={post.data.heroImage} alt="" />
+										)}
+										<h2 class="item-title">{post.data.title}</h2>
+										<p class="item-date">
+											<FormattedDate date={post.data.pubDate} />
+										</p>
+									</a>
+								</li>
+							);
+						})
+					}
+				</ul>
+			) : (
+				<p class="tag-page-meta" data-i18n="search.noResults">暂无文章。</p>
+			)}
+		</main>
+		<Footer />
+	</body>
+</html>
