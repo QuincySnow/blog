@@ -1,155 +1,128 @@
 ---
-title: OpenCode 插件组合实战：Superpowers + DCP + Notificator 让我的 AI 编码效率起飞
-description: 分享一套轻量、高性价比的 OpenCode 插件组合，适合个人开发者
+title: OpenCode 本地工具链实战：Superpowers、CodeGraph、知识图谱与上下文管理
+description: 一套面向长会话与复杂代码库的 OpenCode 本地工作流：流程、代码理解、上下文管理和通知
 pubDatetime: 2026-04-16T00:00:00Z
 lang: zh
 tags: ["OpenCode", "AI 编程", "效率工具"]
 ---
 
-# OpenCode 插件组合实战：Superpowers + DCP + Notificator 让 AI 编码效率起飞
+# OpenCode 本地工具链实战：Superpowers、CodeGraph、知识图谱与上下文管理
 
-之前试过 oh-my-opencode-slim，但因为 provider 兼容性问题放弃了。后来精简到 **Superpowers + Dynamic Context Pruning (DCP) + Notificator** 这三个插件组合，实测下来性价比极高，适合个人开发者。
+一段长会话里，真正容易失控的通常不是模型能力，而是流程、代码定位和上下文。下面这套本地工具链把这些问题拆开处理：Superpowers 管流程，CodeGraph 和知识图谱负责理解代码，context-mode 管理工具输出，DCP 清理不再需要的上下文；桌面通知则只是可选的收尾体验。
 
-今天分享一下这个轻量组合的安装、使用心得和实际效果。
+## 这套组合解决什么问题？
 
-## 为什么选择这三个插件？
+复杂代码库不适合每次都从文件树开始搜索；长会话也不该把每一次命令输出都永久留在上下文中。把职责分开后，OpenCode 可以在需要时定位符号和调用路径，把大输出留在本地索引中，再把流程约束和上下文维护交给专门工具。
 
-- **Superpowers**（[obra/superpowers](https://github.com/obra/superpowers)）：给 AI 装上真正的软件工程 SOP（Standard Operating Procedure）。它会自动强化 Planning、TDD（测试驱动开发）、代码审查、git worktree 隔离、根因分析等流程。避免了"随便生成代码"的 vibe coding，让 Plan 更严谨，Build 更可靠。
-- **DCP**（[opencode-dynamic-context-pruning](https://github.com/Opencode-DCP/opencode-dynamic-context-pruning)）：省 token 神器！它非破坏性地剪枝过时工具输出（重复 read file、旧 ls 结果等），单次长会话能轻松节省 30-60% token（有时一次去掉 50k+ 无用上下文）。长迭代 Build 时特别明显，预算敏感的朋友一定会爱上它。
-- **Notificator**（[mohak34/opencode-notifier](https://github.com/mohak34/opencode-notifier) + BurntToast）：在 WSL 环境下实现 Windows 桌面 Toast 通知 + 声音提醒。Build 完成、出错、需要人工确认时自动弹窗不用一直盯着终端。
+本文涉及的项目：
 
-这三个插件**轻量、不冲突、零云依赖风险**（DCP 和 Superpowers 完全本地），完美适配大模型做规划、小模型做迭代的搭配。
+- [CodeGraph](https://github.com/colbymchenry/codegraph)
+- [codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp)
+- [context-mode](https://github.com/mksglu/context-mode)
+- [Dynamic Context Pruning](https://github.com/Opencode-DCP/opencode-dynamic-context-pruning)
 
-## 安装步骤
+## 六层职责分工
 
-1. **Superpowers**（最重要，先装）：
-   在 OpenCode TUI 中直接输入：
-   ```
-   Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
-   ```
-   或者在 `opencode.jsonc` 的 `plugin` 数组中添加：
-   ```json
-   "superpowers@git+https://github.com/obra/superpowers.git"
-   ```
+1. **Superpowers：流程层。** 用于把需求澄清、排查、测试和完成前验证变成明确步骤，避免直接跳到实现。
+2. **CodeGraph：符号与调用路径层。** 为仓库建立本地代码图后，可以直接围绕符号、文件或问题探索关联代码。
+3. **codebase-memory-mcp：知识图谱层。** 通过 MCP 工具 `index_repository` 建立索引，再用 `search_graph` 找到函数、类、路由等结构化对象，并用 `trace_path` 追踪调用或数据路径。
+4. **context-mode：上下文处理层。** `ctx_execute` 和 `ctx_execute_file` 让分析在沙箱中完成；`ctx_batch_execute` 适合批量收集命令结果；`ctx_search` 用于从已索引内容中检索需要的片段。
+5. **DCP：上下文修剪层。** 它负责在会话中清理不再需要的工具输出，让当前任务保留更相关的上下文。
+6. **Notificator：可选通知层。** 仅在需要离开终端等待任务完成时，再为 WSL/Windows 配置桌面通知。
 
-2. **DCP**：
-   ```
-   opencode plugin @tarquinen/opencode-dcp@latest --global
-   ```
+## 安装与初始化
 
-3. **Notificator**（需要 BurntToast 模块）：
-   在 `opencode.jsonc` 中添加：
-   ```json
-   "@mohak34/opencode-notifier"
-   ```
-   首次使用前安装 BurntToast 模块（ PowerShell 中执行）：
-   ```powershell
-   Install-Module -Name BurntToast -Force -Scope CurrentUser
-   ```
-   并配置 WSL 专用 PowerShell 弹窗：
+先按各项目官方文档完成对应安装。CodeGraph 的官方 CLI 流程如下：
 
-   ```json
-   {
-     "notificator": {
-       "command": {
-         "enabled": true,
-         "path": "pwsh.exe",
-         "args": [
-           "-NoProfile",
-           "-Command",
-           "$event = '{event}'; if ($event -in @('permission','complete','error','question')) { New-BurntToastNotification -Text $event, '{message}' -Sound 'Default' }"
-         ]
-       },
-       "events": {
-         "user_message": {
-           "notification": false,
-           "sound": false,
-           "command": false
-         },
-         "session_started": {
-           "notification": false,
-           "sound": false,
-           "command": false
-         },
-         "permission": {
-           "notification": true,
-           "sound": true,
-           "command": true
-         },
-         "complete": {
-           "notification": true,
-           "sound": true,
-           "command": true
-         },
-         "error": {
-           "notification": true,
-           "sound": true,
-           "command": true
-         },
-         "question": {
-           "notification": true,
-           "sound": true,
-           "command": true
-         }
-       },
-       "suppressWhenFocused": true,
-       "suppressInterval": 5
-     }
-   }
-   ```
-
-### 配置说明
-
-- **suppressWhenFocused: true**：当 OpenCode 窗口在焦点时，完全不弹通知、不发声（你正在打字或看输出时不会被打扰）。
-- **events 过滤**：彻底关闭 user_message 和 session_started，只在重要事件（完成、出错、需要权限、提问）时触发。
-- **PowerShell 判断**：即使 command 被触发，也只处理重要事件，防止意外。
-- **suppressInterval: 5**：5 秒内相同事件只触发一次，避免重复弹窗。
-
-装完后运行：
 ```bash
-opencode reload
-opencode doctor
+codegraph install
+codegraph init
 ```
-确认三个插件都加载成功。
 
-## 推荐核心配置（~/.config/opencode/opencode.jsonc）
+初始化后，可以从一个具体问题开始探索代码：
 
-```jsonc
+```bash
+codegraph explore "authentication flow"
+```
+
+codebase-memory-mcp 和 context-mode 通过 OpenCode 的 MCP 工具面使用即可。前者的重点是先用 `index_repository` 索引仓库，再按需调用 `search_graph` 和 `trace_path`；后者则把耗时命令或大文件的分析结果留在可检索的本地上下文中。这里不提供未经官方来源验证的安装命令。
+
+Dynamic Context Pruning 可按其官方命令全局安装：
+
+```bash
+opencode plugin @tarquinen/opencode-dcp@latest --global
+```
+
+## 每天如何使用
+
+从任务而不是工具开始：先让 Superpowers 帮你确定是排查、实现还是审查；需要理解现有逻辑时，优先用 CodeGraph 或知识图谱定位符号和路径，而不是反复全文搜索。
+
+遇到大文件、构建日志或多条独立命令时，把分析交给 context-mode。`ctx_execute` 适合执行并提炼命令输出，`ctx_execute_file` 适合在不把整份文件带入会话的前提下分析文件，`ctx_batch_execute` 用于成组收集，而 `ctx_search` 只取回后续真正需要的内容。
+
+完成修改后，回到项目本身运行最小而完整的验证命令。DCP 在后台处理会话中已经过时的工具上下文，不需要改变上述工作顺序。
+
+## 可选：WSL 桌面通知
+
+下面的配置**完全可选**，只与使用 WSL 且希望通过 Windows 桌面接收通知的用户有关。它保留 PowerShell 的 BurntToast 安装命令和 `notificator` 配置；不使用 WSL/Windows 时不需要安装或配置它。
+
+首次使用前安装 BurntToast 模块（ PowerShell 中执行）：
+
+```powershell
+Install-Module -Name BurntToast -Force -Scope CurrentUser
+```
+
+并配置 WSL 专用 PowerShell 弹窗：
+
+```json
 {
-  "model": "opencode-go/<your-plan-model>",           // Plan 用强推理模型
-  "small_model": "opencode-go/<your-build-model>", // Build/迭代用性价比模型
-  "plugin": [
-    "superpowers@git+https://github.com/obra/superpowers.git",
-    "opencode-dynamic-context-pruning",
-    "@mohak34/opencode-notifier"
-  ],
-  "temperature": 0.1,
-  "dcp": {
-    "enabled": true,
-    "strategies": ["duplicate", "ai-analysis", "compress"],
-    "protect_recent": 10
+  "notificator": {
+    "command": {
+      "enabled": true,
+      "path": "pwsh.exe",
+      "args": [
+        "-NoProfile",
+        "-Command",
+        "$event = '{event}'; if ($event -in @('permission','complete','error','question')) { New-BurntToastNotification -Text $event, '{message}' -Sound 'Default' }"
+      ]
+    },
+    "events": {
+      "user_message": {
+        "notification": false,
+        "sound": false,
+        "command": false
+      },
+      "session_started": {
+        "notification": false,
+        "sound": false,
+        "command": false
+      },
+      "permission": {
+        "notification": true,
+        "sound": true,
+        "command": true
+      },
+      "complete": {
+        "notification": true,
+        "sound": true,
+        "command": true
+      },
+      "error": {
+        "notification": true,
+        "sound": true,
+        "command": true
+      },
+      "question": {
+        "notification": true,
+        "sound": true,
+        "command": true
+      }
+    },
+    "suppressWhenFocused": true,
+    "suppressInterval": 5
   }
 }
 ```
 
-## 实际使用感受
+## 结论
 
-- **Superpowers** 让 AI 不再"随性发挥"，每次 Plan 阶段都会系统性地问问题、拆任务、考虑边缘案例。复杂项目的重构质量明显提升。
-- **DCP** 是最实用的省钱插件。以前长会话 token 消耗爆炸，现在稳定下降 40% 左右，月成本直接降下来。
-- **Notificator** 用 BurntToast 弹窗非常舒服。跑完一个大迭代后，桌面直接弹出"Build Completed!"，不用一直切换窗口。
-
-整体效果：从"AI 助手"升级成了"带流程纪律 + 省钱 + 提醒"的 mini 开发团队。适合独立开发者，尤其是长期项目。
-
-## 适用场景 & 小建议
-
-- 非常适合全栈项目、重构场景、安全敏感项目。
-- 建议先用 Superpowers + DCP 跑熟，再加 Notificator。
-- 如果项目更大，可以后续补充 opencode-vibeguard（脱敏私钥）、opencode-worktree（多任务隔离）等。
-
-## 总结
-
-**Superpowers + DCP + Notificator** 是一套高性价比轻量方案。它不追求花里胡哨的多 Agent，而是专注**流程质量 + 成本控制 + 使用体验**。
-
-如果你也在用 OpenCode，强烈推荐试试这套组合！
-
-欢迎评论区交流你的插件心得，或者分享你的 token 节省数据～
+这不是一个靠单一插件解决所有问题的配置。流程、代码理解和上下文管理分别交给合适的工具：Superpowers 提供工作步骤，CodeGraph 与 codebase-memory-mcp 提供仓库级定位能力，context-mode 处理和检索大输出，DCP 维护会话上下文；Windows 通知则按需添加即可。
