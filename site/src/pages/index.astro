@@ -1,0 +1,125 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import FormattedDate from '../components/FormattedDate.astro';
+import Header from '../components/Header.astro';
+import { SITE_DESCRIPTION, SITE_TITLE, withBase } from '../consts';
+
+const allPosts = (await getCollection('blog'))
+	.filter((p) => !p.data.draft)
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const recentPosts = allPosts.slice(0, 8);
+const searchIndex = allPosts.map((p) => ({
+	id: p.id,
+	title: p.data.title,
+	tags: p.data.tags ?? [],
+	pubDate: p.data.pubDate.toISOString(),
+	lang: p.data.lang ?? 'zh',
+}));
+---
+
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+		<style>
+			.home-intro {
+				margin-bottom: 3rem;
+				padding-bottom: 2rem;
+				border-bottom: 1px solid rgb(var(--border));
+			}
+			.home-intro h1 {
+				margin: 0 0 0.75rem;
+				font-size: 1.75rem;
+			}
+			.home-intro p {
+				margin: 0;
+				color: rgb(var(--text));
+				line-height: 1.7;
+			}
+			.recent-title {
+				margin: 5.5rem 0 1.5rem;
+				font-size: 1.25rem;
+				color: rgb(var(--text-heading));
+			}
+			.home-posts {
+				list-style: none;
+				margin: 0;
+				padding: 0;
+			}
+			.home-posts li {
+				margin: 0;
+				padding: 0;
+			}
+			.home-posts a {
+				display: block;
+				text-decoration: none;
+				padding: 1rem 0;
+				border-bottom: 1px solid rgb(var(--border));
+			}
+			.home-posts a:hover .post-title,
+			.home-posts a:hover .post-date {
+				color: var(--accent);
+			}
+			.home-posts .post-title {
+				margin: 0 0 0.25rem;
+				font-size: 1.1rem;
+				line-height: 1.4;
+				color: rgb(var(--text-heading));
+				transition: color var(--duration-fast) var(--ease-out);
+			}
+			.home-posts .post-date {
+				margin: 0;
+				font-size: 0.85rem;
+				color: rgb(var(--text));
+				opacity: 0.8;
+				transition: color var(--duration-fast) var(--ease-out);
+			}
+			.more-link {
+				display: inline-block;
+				margin-top: 1.5rem;
+				text-decoration: none;
+				color: var(--accent);
+				font-weight: 500;
+				transition: color var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out);
+			}
+			.more-link:hover {
+				text-decoration: underline;
+			}
+			.post-lang-en { display: none; }
+			[lang="zh-CN"] .post-lang-zh { display: block; }
+			[lang="zh-CN"] .post-lang-en { display: none; }
+			[lang="en"] .post-lang-zh { display: none; }
+			[lang="en"] .post-lang-en { display: block; }
+		</style>
+	</head>
+	<body class="home">
+		<Header searchIndex={searchIndex} />
+		<main class="animate-fade-in">
+			<section class="home-intro animate-fade-in-delay">
+				<h1>QuincySnow</h1>
+				<p data-i18n="home.intro">技术笔记与代码分享。</p>
+			</section>
+			<h2 class="recent-title" data-i18n="home.recentTitle">最近文章</h2>
+			<ul class="home-posts animate-stagger-children">
+				{
+					recentPosts.map((post) => {
+						const postLang = post.data.lang ?? 'zh';
+						return (
+						<li class:list={['post-lang-' + postLang]} data-post-lang={postLang}>
+							<a href={withBase(`/posts/${post.id}/`)} class="transition-colors duration-200 hover-lift">
+								<span class="post-title">{post.data.title}</span>
+								<span class="post-date">
+									<FormattedDate date={post.data.pubDate} />
+								</span>
+							</a>
+						</li>
+					); })
+				}
+			</ul>
+			<a href={withBase('/posts/')} class="more-link transition-colors duration-200 hover-scale" data-i18n="home.morePosts">全部文章 →</a>
+		</main>
+		<Footer />
+	</body>
+</html>

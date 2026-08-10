@@ -1,0 +1,31 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import { withBase } from '../consts';
+
+type Props = HTMLAttributes<'a'>;
+
+const { href, class: className, ...props } = Astro.props;
+const raw = Astro.url.pathname.replace(import.meta.env.BASE_URL, '');
+const pathname = ('/' + raw.replace(/^\/|\/$/g, '')).replace(/\/$/, '') || '/';
+const isRoot = pathname === '/';
+const isActive =
+	href === pathname ||
+	(href === '/' && isRoot) ||
+	(href === '/posts' && (pathname === '/posts' || pathname.startsWith('/posts/'))) ||
+	(href === '/tags' && pathname === '/tags') ||
+	(href === '/about' && pathname === '/about');
+---
+
+<a href={withBase(href)} class:list={[className, 'transition-colors duration-200', { active: isActive }]} {...props}>
+	<slot />
+</a>
+<style>
+	a {
+		display: inline-block;
+		text-decoration: none;
+	}
+	a.active {
+		font-weight: bolder;
+		text-decoration: underline;
+	}
+</style>

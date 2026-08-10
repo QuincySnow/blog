@@ -1,0 +1,143 @@
+---
+import Layout from '../layouts/BlogPost.astro';
+import { i18n } from '../i18n';
+
+const metaZh = i18n.zh.about;
+const metaEn = i18n.en.about;
+const metaZhMap: Record<string, string> = { ...metaZh };
+const metaEnMap: Record<string, string> = { ...metaEn };
+
+const projects = [
+	{
+		slug: 'dev-setup',
+		github: 'https://github.com/QuincySnow/dev-setup',
+		demoUrl: null as string | null,
+		demoLabelKey: 'devSetupDemo' as const,
+		nameKey: 'devSetupName' as const,
+		descKey: 'devSetupDesc' as const,
+		techKey: 'devSetupTech' as const,
+	},
+	{
+		slug: 'focusflow',
+		github: 'https://github.com/QuincySnow/focusflow',
+		demoUrl: 'https://focusflow-lemon-eta.vercel.app/',
+		demoLabelKey: null,
+		nameKey: 'focusFlowName' as const,
+		descKey: 'focusFlowDesc' as const,
+		techKey: 'focusFlowTech' as const,
+	},
+];
+---
+
+<Layout
+	title={metaZh.title}
+	description={metaZh.description}
+	pubDate={new Date()}
+	dataI18nTitle="about.title"
+>
+	<section class="about-portfolio" aria-labelledby="portfolio-title">
+		<h2 id="portfolio-title">
+			<span class="post-lang-zh" data-i18n="about.portfolioTitle">{metaZh.portfolioTitle}</span>
+			<span class="post-lang-en" data-i18n="about.portfolioTitle">{metaEn.portfolioTitle}</span>
+		</h2>
+		<p class="about-portfolio-intro post-lang-zh" data-i18n="about.portfolioIntro">{metaZh.portfolioIntro}</p>
+		<p class="about-portfolio-intro post-lang-en" data-i18n="about.portfolioIntro">{metaEn.portfolioIntro}</p>
+
+		<ol class="about-project-list">
+			{projects.map((proj) => (
+				<li class="about-project-item">
+					<h3 class="about-project-name">
+						<span class="post-lang-zh" data-i18n={`about.${proj.nameKey}`}>{metaZhMap[proj.nameKey]}</span>
+						<span class="post-lang-en" data-i18n={`about.${proj.nameKey}`}>{metaEnMap[proj.nameKey]}</span>
+					</h3>
+					<p class="about-project-desc">
+						<span class="post-lang-zh" data-i18n={`about.${proj.descKey}`}>{metaZhMap[proj.descKey]}</span>
+						<span class="post-lang-en" data-i18n={`about.${proj.descKey}`}>{metaEnMap[proj.descKey]}</span>
+					</p>
+					<p class="about-project-meta">
+						<span class="post-lang-zh" data-i18n={`about.${proj.techKey}`}>{metaZhMap[proj.techKey]}</span>
+						<span class="post-lang-en" data-i18n={`about.${proj.techKey}`}>{metaEnMap[proj.techKey]}</span>
+					</p>
+					<p class="about-project-links">
+						<a href={proj.github} target="_blank" rel="noopener noreferrer">
+							<span class="post-lang-zh" data-i18n="about.linkGitHub">{metaZh.linkGitHub}</span>
+							<span class="post-lang-en" data-i18n="about.linkGitHub">{metaEn.linkGitHub}</span>
+						</a>
+						{proj.demoUrl ? (
+							<>
+								{' · '}
+								<a href={proj.demoUrl} target="_blank" rel="noopener noreferrer">
+									<span class="post-lang-zh" data-i18n="about.linkDemo">{metaZh.linkDemo}</span>
+									<span class="post-lang-en" data-i18n="about.linkDemo">{metaEn.linkDemo}</span>
+								</a>
+							</>
+						) : proj.demoLabelKey ? (
+							<>
+								{' · '}
+								<span class="post-lang-zh" data-i18n={`about.${proj.demoLabelKey}`}>{metaZhMap[proj.demoLabelKey]}</span>
+								<span class="post-lang-en" data-i18n={`about.${proj.demoLabelKey}`}>{metaEnMap[proj.demoLabelKey]}</span>
+							</>
+						) : null}
+					</p>
+				</li>
+			))}
+		</ol>
+	</section>
+</Layout>
+<style>
+	.post-lang-en { display: none; }
+	[lang="zh-CN"] .post-lang-zh { display: block; }
+	[lang="zh-CN"] .post-lang-en { display: none; }
+	[lang="en"] .post-lang-zh { display: none; }
+	[lang="en"] .post-lang-en { display: block; }
+
+	.about-portfolio {
+		margin-top: 1.5rem;
+	}
+	.about-portfolio-intro {
+		color: rgb(var(--text));
+		margin-bottom: 1.5rem;
+		line-height: 1.7;
+	}
+	.about-project-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 2rem;
+	}
+	.about-project-item {
+		margin: 0;
+		padding: 0;
+		border-bottom: 1px solid rgb(var(--border));
+		padding-bottom: 1.5rem;
+	}
+	.about-project-item:last-child {
+		border-bottom: none;
+		padding-bottom: 0;
+	}
+	.about-project-name {
+		font-size: 1.25rem;
+		margin: 0 0 0.35rem 0;
+		color: rgb(var(--text-heading));
+	}
+	.about-project-name a,
+	.about-project-name span {
+		color: inherit;
+	}
+	.about-project-desc,
+	.about-project-meta {
+		margin: 0 0 0.25rem 0;
+		font-size: 0.95rem;
+		color: rgb(var(--text));
+		line-height: 1.6;
+	}
+	.about-project-links {
+		margin: 0.5rem 0 0 0;
+		font-size: 0.9rem;
+	}
+	.about-project-links a {
+		color: var(--accent);
+	}
+</style>

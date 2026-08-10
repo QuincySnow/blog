@@ -1,0 +1,71 @@
+---
+// Import the global.css file here so that it is included on
+// all pages through the use of the <BaseHead /> component.
+import '../styles/global.css';
+import type { ImageMetadata } from 'astro';
+import FallbackImage from '../assets/blog-placeholder-1.jpg';
+import { SITE_TITLE, withBase } from '../consts';
+
+interface Props {
+	title: string;
+	description: string;
+	image?: ImageMetadata;
+	/** 首屏 LCP 图片 URL（如博客列表首图），用于 preload 提前请求 */
+	preloadImage?: string;
+}
+
+const canonicalPathname = Astro.url.pathname.replace(/^\/blog/, '');
+const canonicalURL = new URL(canonicalPathname || '/', Astro.site);
+const fontRegular = withBase('/fonts/atkinson-regular.woff');
+const fontBold = withBase('/fonts/atkinson-bold.woff');
+
+const { title, description, image = FallbackImage, preloadImage } = Astro.props;
+
+const criticalCSS = `:root{--font-src-regular:url("${fontRegular}");--font-src-bold:url("${fontBold}");}:root{--bg:255, 255, 255;--text:34, 41, 57;--text-heading:15, 18, 25;--border:229, 233, 240}[data-theme="dark"]{--bg:22, 24, 29;--text:200, 204, 214;--text-heading:230, 232, 238;--border:55, 60, 72}body{display:flex;flex-direction:column;min-height:100vh;font-family:"Atkinson",sans-serif;margin:0;padding:0;background-color:rgb(var(--bg));color:rgb(var(--text))}main{flex:1 0 auto;width:720px;max-width:calc(100% - 3rem);margin:0 auto;padding:2rem 1.5rem 1.5rem}`;
+---
+
+<!-- Global Metadata -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<!-- 有首图时优先 preload 首图（博客列表 LCP），否则优先字体 -->
+{preloadImage && (
+	<link rel="preload" as="image" href={preloadImage} fetchpriority="high" />
+)}
+<link rel="preload" href={withBase('/fonts/atkinson-regular.woff')} as="font" type="font/woff" crossorigin />
+<link rel="preload" href={withBase('/fonts/atkinson-bold.woff')} as="font" type="font/woff" crossorigin />
+<style is:inline set:html={criticalCSS} />
+<script is:inline>
+	(function(){var e=document.documentElement,t=localStorage.getItem("theme");if(t!=="light"&&t!=="dark"){var m=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)");t=m&&m.matches?"dark":"light"}e.setAttribute("data-theme",t)})();
+</script>
+<link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
+<link rel="icon" href={withBase('/favicon.ico')} />
+<link rel="sitemap" href={withBase('/sitemap-index.xml')} />
+<link
+	rel="alternate"
+	type="application/rss+xml"
+	title={SITE_TITLE}
+	href={new URL(withBase('/rss.xml'), Astro.site)}
+/>
+<meta name="generator" content={Astro.generator} />
+
+<!-- Canonical URL -->
+<link rel="canonical" href={canonicalURL} />
+
+<!-- Primary Meta Tags -->
+<title>{title}</title>
+<meta name="title" content={title} />
+<meta name="description" content={description} />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content={Astro.url} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:image" content={new URL(image.src, Astro.url)} />
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:url" content={Astro.url} />
+<meta property="twitter:title" content={title} />
+<meta property="twitter:description" content={description} />
+<meta property="twitter:image" content={new URL(image.src, Astro.url)} />
