@@ -78,6 +78,7 @@ const {} = Astro.props;
 		});
 		return window.__pagefindInitPromise__;
 	}
+	window.ensurePagefind = ensurePagefind;
 </script>
 
 	<script define:vars={{ i18n, basePath: BASE_PATH }}>
