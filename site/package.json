@@ -17,10 +17,10 @@
     "lighthouse": "bunx lighthouse http://localhost:4321/blog --output=html --output-path=./lighthouse-report.html --view"
   },
   "dependencies": {
-    "@astrojs/mdx": "^5.0.0",
-    "@astrojs/rss": "^4.0.17",
-    "@astrojs/sitemap": "^3.7.1",
-    "astro": "^6.1.8",
+    "@astrojs/mdx": "^5.0.6",
+    "@astrojs/rss": "^4.0.19",
+    "@astrojs/sitemap": "^3.7.3",
+    "astro": "^6.4.8",
     "sharp": "^0.34.3"
   },
   "devDependencies": {
