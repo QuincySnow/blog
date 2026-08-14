@@ -55,28 +55,31 @@ const {} = Astro.props;
 </div>
 <script is:inline define:vars={{ basePath: BASE_PATH }}>
 	window.__BASE_PATH__ = basePath;
-	window.__PAGEfindReady__ = false;
-	window.__pagefindSearch = null;
-	window.__pagefindInitPromise__ = null;
+	window.pagefind = null;
+	window.__pagefindLoading = null;
 
 	function ensurePagefind() {
-		if (window.__pagefindSearch) return Promise.resolve(window.__pagefindSearch);
-		if (window.__pagefindInitPromise__) return window.__pagefindInitPromise__;
-		window.__pagefindInitPromise__ = new Promise(function(resolve, reject) {
-			var url = window.location.origin + window.__BASE_PATH__ + '/_pagefind/pagefind.js';
-			var s = document.createElement('script');
-			s.type = 'module';
-			s.textContent = 'import * as _pagefind from "' + url + '"; window.pagefind = _pagefind; window.dispatchEvent(new Event("pagefind-loaded"));';
-			window.addEventListener('pagefind-loaded', function onLoad() {
-				window.removeEventListener('pagefind-loaded', onLoad);
-				window.__pagefindSearch = window.pagefind;
-				window.__PAGEfindReady__ = true;
-				resolve(window.pagefind);
-			});
-			s.onerror = reject;
-			document.head.appendChild(s);
+		if (window.pagefind) return Promise.resolve(window.pagefind);
+		if (window.__pagefindLoading) return window.__pagefindLoading;
+		var url = window.location.origin + window.__BASE_PATH__ + '/_pagefind/pagefind.js';
+		var s = document.createElement('script');
+		s.type = 'module';
+		s.textContent = 'import * as _pf from "' + url + '"; window.pagefind = _pf;';
+		document.head.appendChild(s);
+		window.__pagefindLoading = new Promise(function(resolve, reject) {
+			var tries = 0;
+			var timer = setInterval(function() {
+				tries++;
+				if (window.pagefind) {
+					clearInterval(timer);
+					resolve(window.pagefind);
+				} else if (tries > 120) {
+					clearInterval(timer);
+					reject(new Error('Pagefind load timeout'));
+				}
+			}, 50);
 		});
-		return window.__pagefindInitPromise__;
+		return window.__pagefindLoading;
 	}
 	window.ensurePagefind = ensurePagefind;
 </script>
@@ -181,7 +184,7 @@ const {} = Astro.props;
 			var currentLang = getLang();
 			var q = (input.value || '').trim();
 			if (!q) { resultsEl.style.display = 'none'; return; }
-			if (!window.__pagefindSearch) {
+			if (!window.pagefind) {
 				resultsEl.innerHTML = '<p class="search-overlay-loading">Loading search...</p>';
 				resultsEl.style.display = 'block';
 				ensurePagefind().then(function() {
@@ -194,7 +197,7 @@ const {} = Astro.props;
 				return;
 			}
 			var langFilter = currentLang === 'zh' ? 'zh-cn' : 'en';
-			window.__pagefindSearch.search(q, { lang: langFilter }).then(function(search) {
+			window.pagefind.search(q, { lang: langFilter }).then(function(search) {
 				var results = search.results.slice(0, 12);
 				if (results.length === 0) {
 					resultsEl.innerHTML = '<p class="search-overlay-no-results">' + i18n[currentLang].search.noResults + '</p>';
@@ -238,6 +241,7 @@ const {} = Astro.props;
 				});
 			}
 			setLang(getLang());
+			ensurePagefind().catch(function() {});
 			document.querySelector('.theme-toggle').addEventListener('click', function () {
 				setTheme(getTheme() === 'dark' ? 'light' : 'dark', true);
 			});
