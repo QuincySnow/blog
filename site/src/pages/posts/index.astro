@@ -14,13 +14,6 @@ const allPosts = await getCollection('blog');
 const posts = allPosts
 	.filter((p) => !p.data.draft)
 	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
-const searchIndex = posts.map((p) => ({
-	id: p.id,
-	title: p.data.title,
-	tags: p.data.tags ?? [],
-	pubDate: p.data.pubDate.toISOString(),
-	lang: p.data.lang ?? 'zh',
-}));
 
 const firstHero = posts[0]?.data?.heroImage;
 const firstImageSrc = firstHero ? getImage({ src: firstHero, width: 720, height: 360 }).src : null;
@@ -100,7 +93,7 @@ const firstImageSrc = firstHero ? getImage({ src: firstHero, width: 720, height:
 		</style>
 	</head>
 	<body>
-		<Header searchIndex={searchIndex} />
+		<Header />
 		<main class="animate-fade-in">
 			<h1 class="blog-page-title" data-i18n="nav.posts">博客</h1>
 			<section aria-label="Article list">

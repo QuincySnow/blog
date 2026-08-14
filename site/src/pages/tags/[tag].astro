@@ -26,16 +26,6 @@ const posts = allPosts
 	.filter((p) => !p.data.draft && (p.data.tags ?? []).includes(tag))
 	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
-const searchIndex = allPosts
-	.filter((p) => !p.data.draft)
-	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-	.map((p) => ({
-		id: p.id,
-		title: p.data.title,
-		tags: p.data.tags ?? [],
-		pubDate: p.data.pubDate.toISOString(),
-		lang: p.data.lang ?? 'zh',
-	}));
 
 const meta = i18n[DEFAULT_LANG].tags;
 const titleSuffix = DEFAULT_LANG === 'zh' ? `标签：${tag}` : `Tag: ${tag}`;
@@ -116,7 +106,7 @@ const titleSuffix = DEFAULT_LANG === 'zh' ? `标签：${tag}` : `Tag: ${tag}`;
 		</style>
 	</head>
 	<body>
-		<Header searchIndex={searchIndex} />
+		<Header />
 		<main class="animate-fade-in">
 			<a href={withBase('/tags/')} class="back-link hover-back" data-i18n="tags.back">← 全部标签</a>
 			<h1 class="tag-page-title">{tag}</h1>

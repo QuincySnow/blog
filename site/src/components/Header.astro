@@ -3,20 +3,9 @@ import { BASE_PATH, SITE_TITLE, withBase } from '../consts';
 import HeaderLink from './HeaderLink.astro';
 import { i18n } from '../i18n';
 
-export interface SearchIndexItem {
-	id: string;
-	title: string;
-	tags: string[];
-	pubDate: string;
-	lang?: string;
-}
+interface Props {}
 
-interface Props {
-	searchIndex?: SearchIndexItem[];
-}
-
-const { searchIndex = [] } = Astro.props;
-const searchIndexJson = JSON.stringify(searchIndex);
+const {} = Astro.props;
 ---
 
 <script is:inline>
@@ -64,8 +53,8 @@ const searchIndexJson = JSON.stringify(searchIndex);
 		<div id="search-overlay-results" class="search-overlay-results" aria-live="polite"></div>
 	</div>
 </div>
-<script is:inline define:vars={{ searchIndexJson, basePath: BASE_PATH }}>
-	window.__SEARCH_INDEX__ = typeof searchIndexJson !== 'undefined' ? JSON.parse(searchIndexJson) : [];
+<script is:inline define:vars={{ basePath: BASE_PATH }}>
+	window.__PAGEfindReady__ = false;
 </script>
 
 	<script define:vars={{ i18n, basePath: BASE_PATH }}>
@@ -164,36 +153,41 @@ const searchIndexJson = JSON.stringify(searchIndex);
 		function runSearchOverlay() {
 			var input = document.getElementById('search-overlay-input');
 			var resultsEl = document.getElementById('search-overlay-results');
-			var index = window.__SEARCH_INDEX__;
-			if (!input || !resultsEl || !Array.isArray(index)) return;
+			if (!input || !resultsEl) return;
 			var currentLang = getLang();
-			var q = (input.value || '').trim().toLowerCase();
-			var list = index.filter(function (item) {
-				var itemLang = item.lang || 'zh';
-				if (itemLang !== currentLang) return false;
-				if (!q) return true;
-				var titleMatch = (item.title || '').toLowerCase().indexOf(q) >= 0;
-				var tagsMatch = (item.tags || []).some(function (t) { return t.toLowerCase().indexOf(q) >= 0; });
-				return titleMatch || tagsMatch;
-			});
-			var noResultsLabel = i18n[currentLang].search.noResults;
-			if (list.length === 0) {
-				resultsEl.innerHTML = '<p class="search-overlay-no-results">' + noResultsLabel + '</p>';
+			var q = (input.value || '').trim();
+			if (!q) { resultsEl.style.display = 'none'; return; }
+			if (!window.__pagefindSearch) {
+				resultsEl.innerHTML = '<p class="search-overlay-loading">Loading search...</p>';
 				resultsEl.style.display = 'block';
 				return;
 			}
-			var html = '<ul class="search-overlay-list">';
-			var locale = i18n[currentLang].dateLocale || (currentLang === 'zh' ? 'zh-CN' : 'en-US');
-			list.slice(0, 12).forEach(function (item) {
-				var href = basePath + '/posts/' + item.id + '/';
-				var dateStr = item.pubDate ? new Date(item.pubDate).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
-				var tagsStr = (item.tags && item.tags.length) ? item.tags.slice(0, 4).join(' · ') : '';
-				html += '<li><a href="' + href + '"><span class="search-overlay-result-title">' + escapeHtml(item.title) + '</span><span class="search-overlay-result-meta">' + dateStr + (tagsStr ? ' · ' + escapeHtml(tagsStr) : '') + '</span></a></li>';
+			var langFilter = currentLang === 'zh' ? 'zh-cn' : 'en';
+			window.__pagefindSearch(q, { lang: langFilter }).then(function(search) {
+				var results = search.results.slice(0, 12);
+				if (results.length === 0) {
+					resultsEl.innerHTML = '<p class="search-overlay-no-results">' + i18n[currentLang].search.noResults + '</p>';
+					resultsEl.style.display = 'block';
+					return;
+				}
+				Promise.all(results.map(function(r) { return r.data(); })).then(function(dataList) {
+					var html = '<ul class="search-overlay-list">';
+					var locale = i18n[currentLang].dateLocale || (currentLang === 'zh' ? 'zh-CN' : 'en-US');
+					dataList.forEach(function(item) {
+						var href = item.url || '#';
+						var title = item.meta?.title || item.title || '';
+						var excerpt = item.excerpt || '';
+						html += '<li><a href="' + href + '"><span class="search-overlay-result-title">' + title + '</span><span class="search-overlay-result-excerpt">' + excerpt + '</span></a></li>';
+					});
+					html += '</ul>';
+					if (search.results.length > 12) html += '<p class="search-overlay-more">' + (search.results.length - 12) + ' ' + i18n[currentLang].search.moreResults + '</p>';
+					resultsEl.innerHTML = html;
+					resultsEl.style.display = 'block';
+				});
+			}).catch(function() {
+				resultsEl.innerHTML = '<p class="search-overlay-no-results">' + i18n[currentLang].search.noResults + '</p>';
+				resultsEl.style.display = 'block';
 			});
-			html += '</ul>';
-			if (list.length > 12) html += '<p class="search-overlay-more">' + (list.length - 12) + ' ' + i18n[currentLang].search.moreResults + '</p>';
-			resultsEl.innerHTML = html;
-			resultsEl.style.display = 'block';
 		}
 		function escapeHtml(s) {
 			var div = document.createElement('div');
@@ -201,6 +195,16 @@ const searchIndexJson = JSON.stringify(searchIndex);
 			return div.innerHTML;
 		}
 		document.addEventListener('DOMContentLoaded', function () {
+			// Load Pagefind
+			var script = document.createElement('script');
+			script.src = basePath + '/_pagefind/pagefind.js';
+			script.async = true;
+			script.onload = function() {
+				window.__pagefindSearch = window.pagefind;
+				window.__PAGEfindReady__ = true;
+			};
+			document.head.appendChild(script);
+
 			var stored = getStoredTheme();
 			if (stored === 'light' || stored === 'dark') {
 				setTheme(stored, false);
@@ -527,9 +531,23 @@ const searchIndexJson = JSON.stringify(searchIndex);
 		color: rgb(var(--gray));
 	}
 	.search-overlay-no-results,
-	.search-overlay-more {
+	.search-overlay-more,
+	.search-overlay-loading {
 		margin: 0;
 		font-size: 0.9rem;
 		color: rgb(var(--gray));
+	}
+	.search-overlay-result-excerpt {
+		display: block;
+		font-size: 0.82rem;
+		color: rgb(var(--gray));
+		margin-top: 0.2rem;
+		line-height: 1.4;
+	}
+	.search-overlay-result-excerpt mark {
+		background: rgba(35, 55, 255, 0.15);
+		color: inherit;
+		border-radius: 2px;
+		padding: 0 2px;
 	}
 </style>

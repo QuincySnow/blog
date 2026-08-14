@@ -19,15 +19,6 @@ for (const post of allPosts) {
 const tags = Array.from(tagCount.entries())
 	.sort((a, b) => b[1] - a[1])
 	.map(([name, count]) => ({ name, count }));
-const searchIndex = allPosts
-	.filter((p) => !p.data.draft)
-	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-	.map((p) => ({
-		id: p.id,
-		title: p.data.title,
-		tags: p.data.tags ?? [],
-		pubDate: p.data.pubDate.toISOString(),
-	}));
 ---
 
 <!doctype html>
@@ -84,7 +75,7 @@ const searchIndex = allPosts
 		</style>
 	</head>
 	<body>
-		<Header searchIndex={searchIndex} />
+		<Header />
 		<main class="animate-fade-in">
 			<h1 class="tags-page-title" data-i18n="tags.title">标签</h1>
 			<ul class="tags-list animate-stagger-children">

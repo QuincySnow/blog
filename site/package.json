@@ -14,7 +14,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "lighthouse": "bunx lighthouse http://localhost:4321/blog --output=html --output-path=./lighthouse-report.html --view"
+    "lighthouse": "bunx lighthouse http://localhost:4321/blog --output=html --output-path=./lighthouse-report.html --view",
+    "postbuild": "bunx pagefind --site dist --output-path dist/_pagefind"
   },
   "dependencies": {
     "@astrojs/mdx": "^5.0.6",
@@ -27,6 +28,7 @@
     "@playwright/test": "^1.49.0",
     "@tailwindcss/vite": "^4.2.1",
     "daisyui": "^5.5.19",
+    "pagefind": "^1.5.2",
     "tailwindcss": "^4.2.1",
     "vitest": "^2.1.0"
   }

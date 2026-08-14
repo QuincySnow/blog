@@ -10,13 +10,6 @@ const allPosts = (await getCollection('blog'))
 	.filter((p) => !p.data.draft)
 	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 const recentPosts = allPosts.slice(0, 8);
-const searchIndex = allPosts.map((p) => ({
-	id: p.id,
-	title: p.data.title,
-	tags: p.data.tags ?? [],
-	pubDate: p.data.pubDate.toISOString(),
-	lang: p.data.lang ?? 'zh',
-}));
 ---
 
 <!doctype html>
@@ -95,7 +88,7 @@ const searchIndex = allPosts.map((p) => ({
 		</style>
 	</head>
 	<body class="home">
-		<Header searchIndex={searchIndex} />
+		<Header />
 		<main class="animate-fade-in">
 			<section class="home-intro animate-fade-in-delay">
 				<h1>QuincySnow</h1>
