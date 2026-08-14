@@ -241,7 +241,10 @@ const {} = Astro.props;
 				});
 			}
 			setLang(getLang());
-			ensurePagefind().catch(function() {});
+			ensurePagefind().then(function() {
+				var warmLang = getLang() === 'zh' ? 'zh-cn' : 'en';
+				window.pagefind.preload(warmLang === 'zh-cn' ? '的' : 'the', { lang: warmLang }).catch(function() {});
+			}).catch(function() {});
 			document.querySelector('.theme-toggle').addEventListener('click', function () {
 				setTheme(getTheme() === 'dark' ? 'light' : 'dark', true);
 			});
