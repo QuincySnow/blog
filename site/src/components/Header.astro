@@ -64,12 +64,17 @@ const {} = Astro.props;
 		if (window.__pagefindInitPromise__) return window.__pagefindInitPromise__;
 		window.__pagefindInitPromise__ = new Promise(function(resolve, reject) {
 			var url = window.location.origin + window.__BASE_PATH__ + '/_pagefind/pagefind.js';
-			import(url).then(function(mod) {
-				mod.init();
-				window.__pagefindSearch = mod;
+			var s = document.createElement('script');
+			s.type = 'module';
+			s.textContent = 'import * as _pagefind from "' + url + '"; window.pagefind = _pagefind; window.dispatchEvent(new Event("pagefind-loaded"));';
+			window.addEventListener('pagefind-loaded', function onLoad() {
+				window.removeEventListener('pagefind-loaded', onLoad);
+				window.__pagefindSearch = window.pagefind;
 				window.__PAGEfindReady__ = true;
-				resolve(mod);
-			}).catch(reject);
+				resolve(window.pagefind);
+			});
+			s.onerror = reject;
+			document.head.appendChild(s);
 		});
 		return window.__pagefindInitPromise__;
 	}
