@@ -54,7 +54,25 @@ const {} = Astro.props;
 	</div>
 </div>
 <script is:inline define:vars={{ basePath: BASE_PATH }}>
+	window.__BASE_PATH__ = basePath;
 	window.__PAGEfindReady__ = false;
+	window.__pagefindSearch = null;
+	window.__pagefindInitPromise__ = null;
+
+	function ensurePagefind() {
+		if (window.__pagefindSearch) return Promise.resolve(window.__pagefindSearch);
+		if (window.__pagefindInitPromise__) return window.__pagefindInitPromise__;
+		window.__pagefindInitPromise__ = new Promise(function(resolve, reject) {
+			var url = window.location.origin + window.__BASE_PATH__ + '/_pagefind/pagefind.js';
+			import(url).then(function(mod) {
+				mod.init();
+				window.__pagefindSearch = mod;
+				window.__PAGEfindReady__ = true;
+				resolve(mod);
+			}).catch(reject);
+		});
+		return window.__pagefindInitPromise__;
+	}
 </script>
 
 	<script define:vars={{ i18n, basePath: BASE_PATH }}>
@@ -160,10 +178,17 @@ const {} = Astro.props;
 			if (!window.__pagefindSearch) {
 				resultsEl.innerHTML = '<p class="search-overlay-loading">Loading search...</p>';
 				resultsEl.style.display = 'block';
+				ensurePagefind().then(function() {
+					runSearchOverlay();
+				}).catch(function(e) {
+					console.error('Pagefind load failed:', e);
+					resultsEl.innerHTML = '<p class="search-overlay-no-results">Search unavailable</p>';
+					resultsEl.style.display = 'block';
+				});
 				return;
 			}
 			var langFilter = currentLang === 'zh' ? 'zh-cn' : 'en';
-			window.__pagefindSearch(q, { lang: langFilter }).then(function(search) {
+			window.__pagefindSearch.search(q, { lang: langFilter }).then(function(search) {
 				var results = search.results.slice(0, 12);
 				if (results.length === 0) {
 					resultsEl.innerHTML = '<p class="search-overlay-no-results">' + i18n[currentLang].search.noResults + '</p>';
@@ -172,7 +197,6 @@ const {} = Astro.props;
 				}
 				Promise.all(results.map(function(r) { return r.data(); })).then(function(dataList) {
 					var html = '<ul class="search-overlay-list">';
-					var locale = i18n[currentLang].dateLocale || (currentLang === 'zh' ? 'zh-CN' : 'en-US');
 					dataList.forEach(function(item) {
 						var href = item.url || '#';
 						var title = item.meta?.title || item.title || '';
@@ -195,16 +219,6 @@ const {} = Astro.props;
 			return div.innerHTML;
 		}
 		document.addEventListener('DOMContentLoaded', function () {
-			// Load Pagefind
-			var script = document.createElement('script');
-			script.src = basePath + '/_pagefind/pagefind.js';
-			script.async = true;
-			script.onload = function() {
-				window.__pagefindSearch = window.pagefind;
-				window.__PAGEfindReady__ = true;
-			};
-			document.head.appendChild(script);
-
 			var stored = getStoredTheme();
 			if (stored === 'light' || stored === 'dark') {
 				setTheme(stored, false);
