@@ -42,16 +42,33 @@ lang: zh
 sudo nano /etc/NetworkManager/conf.d/20-connectivity.conf
 ```
 
-2. 根据选定的服务商填入对应的配置内容（以 Microsoft 为例）：
+2. 根据需要的服务商填入对应的配置内容即可：
 
-```
+Cloudflare
+
+```bash
 [connectivity]
 uri=http://cp.cloudflare.com/generate_204
 response=
 ```
 
-**(注：如果选择 Apple 或 Microsoft，需同时修改对应的 uri 与 response 字段。例如 Apple 需写明 response=Success)**
+Microsoft
 
+```bash
+[connectivity]
+uri=http://www.msftconnecttest.com/connecttest.txt
+response=Microsoft Connect Test
+```
+
+Apple
+
+```bash
+[connectivity]
+uri=http://captive.apple.com/hotspot-detect.html
+response=Success
+```
+
+**(注：如果选择 Apple 或 Microsoft，需同时修改对应的 uri 与 response 字段。例如 Apple 需写明 response=Success)**
 
 3. 保存并退出编辑器，随后重启 NetworkManager 服务使配置立即生效：
 
