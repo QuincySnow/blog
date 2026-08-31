@@ -1,6 +1,6 @@
 ---
 title: 让 MPV 说中文：uosc 现代化界面安装与中文设置指南
-description: 从零安装 MPV 播放器与 uosc 现代化界面，再修改 uosc.conf 将界面切换为简体中文，覆盖 Windows 与 Linux 两种平台
+description: 从零安装 MPV 播放器与 uosc 现代化界面，再修改 uosc.conf 将界面切换为简体中文，覆盖 Windows、Linux 与 Android 手机端
 pubDatetime: 2026-08-31T00:00:00Z
 modDatetime: 2026-08-31T00:00:00Z
 draft: false
@@ -10,13 +10,14 @@ tags:
   - media-player
   - Windows
   - Linux
+  - Android
   - Tooling
 lang: zh
 ---
 
 # 让 MPV 说中文：uosc 现代化界面安装与中文设置指南
 
-**MPV** 是功能最强大的开源播放器之一，但默认的界面（OSC）相当简陋，看起来像"毛坯房"。**uosc** 则是一款现代化、接近式（proximity-based）设计的界面增强脚本，自带完整的**简体中文翻译**。本文带你从零开始：装好 MPV → 装上 uosc → 改一行配置 → 重启后界面就是中文，Windows 和 Linux 都覆盖。
+**MPV** 是功能最强大的开源播放器之一，但默认的界面（OSC）相当简陋，看起来像"毛坯房"。**uosc** 则是一款现代化、接近式（proximity-based）设计的界面增强脚本，自带完整的**简体中文翻译**。本文带你从零开始：装好 MPV → 装上 uosc → 改一行配置 → 重启后界面就是中文，桌面端 Windows / Linux 与手机端 Android 全覆盖。
 
 ## 一、安装 MPV
 
@@ -132,6 +133,30 @@ border=no
   ```
 
 想了解更多播放器现代化方案，可以结合阅读我的 [2026 年多平台现代播放器调优指南](/blog/posts/zh/2026-02-01-Video_and_muisc)。
+
+## 五、手机端：Android 上的 MPV —— mpvRex
+
+桌面端调好了，手机也想用 MPV？Android 上有一款基于 libmpv 的现代播放器 —— **mpvRex**（[GitHub: sfsakhawat999/mpvRex](https://github.com/sfsakhawat999/mpvRex)）。
+
+**它是什么**：mpvRex 是 mpvEx 的分支（mpvEx 又源自 mpv-android），把 libmpv 引擎搬进 Android，并配上 Jetpack Compose 的现代界面。你在桌面端喜欢的 MPV 特性——HDR、硬件解码、着色器管线——在手机上同样能享受。
+
+主要特色：
+
+- **玻璃拟态播放界面**（Glassmorphism）+ Material You 动态取色
+- **HDR 转 SDR 色调映射**（hdr-toys 着色器管线）
+- 圆形双击快进、手势取消快进、字幕拖拽定位与滑动跳转、A-B 循环、逐帧导航、缩放与平移
+- 文件管理 + 媒体库：M3U 播放列表、WebDAV/SMB/FTP 网络流代理、封面缩略图
+- 画中画（PiP）、竖屏 Shorts 模式、后台播放省电优化
+
+**安装**（Android 侧载 APK）：
+
+1. 打开 [mpvRex Releases](https://github.com/sfsakhawat999/mpvRex/releases)。
+2. 按手机架构下载：绝大多数现代手机选 `REX-Player-arm64-v8a-<版本>.apk`；老 32 位设备选 `armeabi-v7a`；不确定就下 `universal`。
+3. 安装 APK 即可，首次侧载需允许「安装未知来源应用」。
+
+想尝鲜预览版可以访问 [sfsakhawat999.github.io/mpvRex](https://sfsakhawat999.github.io/mpvRex)，注意预览版可能不稳定，仅适合测试。
+
+> **小贴士**：mpvRex 是独立的本地播放器，不是桌面 mpv 的遥控器；如果你想要手机遥控电脑播放，那属于另一类工具（如 mpv 的 `--input-ipc-server` + 遥控 App），不在本文范围。
 
 ## 常见问题
 

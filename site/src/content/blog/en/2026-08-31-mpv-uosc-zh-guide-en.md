@@ -1,6 +1,6 @@
 ---
 title: "Make MPV Speak Chinese: Install uosc and Enable the Simplified Chinese UI"
-description: "From zero: install MPV and the uosc modern UI, then set languages=zh-hans,slang,en in uosc.conf for a Simplified Chinese interface, covering both Windows and Linux"
+description: "From zero: install MPV and the uosc modern UI, then set languages=zh-hans,slang,en in uosc.conf for a Simplified Chinese interface, covering Windows, Linux and Android"
 pubDatetime: 2026-08-31T00:00:00Z
 modDatetime: 2026-08-31T00:00:00Z
 draft: false
@@ -10,13 +10,14 @@ tags:
   - media-player
   - Windows
   - Linux
+  - Android
   - Tooling
 lang: en
 ---
 
 # Make MPV Speak Chinese: Install uosc and Enable the Simplified Chinese UI
 
-**MPV** is one of the most powerful open-source media players, but its default on-screen controller (OSC) is rather bare-bones. **uosc** is a modern, proximity-based UI enhancement script that ships with a **complete Simplified Chinese translation**. This guide takes you from zero: install MPV → install uosc → change one line → restart, and the UI is in Chinese. Windows and Linux are both covered.
+**MPV** is one of the most powerful open-source media players, but its default on-screen controller (OSC) is rather bare-bones. **uosc** is a modern, proximity-based UI enhancement script that ships with a **complete Simplified Chinese translation**. This guide takes you from zero: install MPV → install uosc → change one line → restart, and the UI is in Chinese. Desktops (Windows/Linux) and Android phones are all covered.
 
 ## 1. Install MPV
 
@@ -132,6 +133,30 @@ border=no
   ```
 
 For more player modernization ideas, check out my [2026 multi-platform modern player tuning guide](/blog/posts/en/2026-02-01-Video_and_muisc-en).
+
+## 5. Mobile: mpvRex — MPV on Android
+
+Want MPV on your phone too? There's a modern libmpv-based player for Android: **mpvRex** ([GitHub: sfsakhawat999/mpvRex](https://github.com/sfsakhawat999/mpvRex)).
+
+**What it is**: mpvRex is a fork of mpvEx (which itself descends from mpv-android), bringing the libmpv engine to Android with a modern Jetpack Compose UI. The MPV features you enjoy on desktop — HDR, hardware decoding, shader pipelines — are available on your phone as well.
+
+Highlights:
+
+- **Glassmorphism player UI** + Material You dynamic theming
+- **HDR-to-SDR tone mapping** via the hdr-toys shader pipeline
+- Circular double-tap seek, seek cancellation, subtitle drag-to-reposition & swipe seeking, A-B loop, frame-by-frame navigation, zoom & pan
+- File explorer + media library: M3U playlists, WebDAV/SMB/FTP streaming proxy, embedded cover art thumbnails
+- Picture-in-picture, vertical Shorts mode, battery-optimized background playback
+
+**Install** (sideload the APK on Android):
+
+1. Open the [mpvRex Releases page](https://github.com/sfsakhawat999/mpvRex/releases).
+2. Pick the APK for your device architecture: most modern phones want `REX-Player-arm64-v8a-<version>.apk`; older 32-bit devices want `armeabi-v7a`; when in doubt, grab `universal`.
+3. Install the APK (allow "install from unknown sources" on first sideload).
+
+For preview builds, visit [sfsakhawat999.github.io/mpvRex](https://sfsakhawat999.github.io/mpvRex) — keep in mind preview builds may be unstable and are for testing only.
+
+> **Tip**: mpvRex is a standalone local player, not a remote control for desktop mpv. If you want to control your PC player from the phone, that's a different category of tool (e.g. mpv's `--input-ipc-server` plus a remote app) and is out of scope here.
 
 ## FAQ
 
