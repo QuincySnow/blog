@@ -36,15 +36,9 @@ lang: zh
 
 4. Mozilla Firefox (success.txt)
 
-地址：[http://detectportal.firefox.com/success.txt](http://detectportal.firefox.com/success.txt)
+地址：`http://detectportal.firefox.com/success.txt`
 
 响应要求：success
-
-5. Mozilla Firefox (canonical.html)
-
-地址：[http://detectportal.firefox.com/canonical.html](http://detectportal.firefox.com/canonical.html)
-
-响应要求：视具体返回内容或留空
 
 ## 使用与配置说明
 
@@ -86,14 +80,6 @@ Mozilla Firefox (success.txt)
 [connectivity]
 uri=http://detectportal.firefox.com/success.txt
 response=success
-```
-
-Mozilla Firefox (canonical.html)
-
-```bash
-[connectivity]
-uri=http://detectportal.firefox.com/canonical.html
-response=
 ```
 
 **(注：如果选择 Apple 或 Microsoft，需同时修改对应的 uri 与 response 字段。例如 Apple 需写明 response=Success)**
