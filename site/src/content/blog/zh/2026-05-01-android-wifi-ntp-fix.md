@@ -5,10 +5,10 @@ lang: zh
 modDatetime: "2026-05-01T00:00:00Z"
 pubDatetime: "2026-05-01T00:00:00Z"
 tags:
-- Android
-- WiFi
-- ADB
-- NTP
+  - Android
+  - WiFi
+  - ADB
+  - NTP
 title: Past原生安卓解决WiFi网络受限以及修改NTP服务器
 ---
 
@@ -18,31 +18,55 @@ title: Past原生安卓解决WiFi网络受限以及修改NTP服务器
 
 先删除默认的地址：
 
-``` bash
+```bash
 adb shell settings delete global captive_portal_https_url
 adb shell settings delete global captive_portal_http_url
 ```
 
 再修改新的地址：
 
-``` bash
+```bash
 adb shell settings put global captive_portal_https_url https://connect.rom.miui.com/generate_204
 adb shell settings put global captive_portal_http_url http://connect.rom.miui.com/generate_204
 ```
 
 ### Captive Portal 检测地址
 
-如果使用 LineageOS / 原生 Android，Captive Portal
-检测地址修改为 V2EX：
+如果使用 LineageOS / 原生 Android，可以使用以下支持 `generate_204` 路径的检测地址：
 
-``` bash
+#### V2EX
+
+```bash
 adb shell settings put global captive_portal_https_url https://captive.v2ex.co/generate_204
 adb shell settings put global captive_portal_http_url http://captive.v2ex.co/generate_204
 ```
 
+#### Apple
+
+```bash
+adb shell settings put global captive_portal_https_url https://captive.apple.com/generate_204
+adb shell settings put global captive_portal_http_url http://captive.apple.com/generate_204
+```
+
+#### Cloudflare
+
+```bash
+adb shell settings put global captive_portal_https_url https://cp.cloudflare.com/generate_204
+adb shell settings put global captive_portal_http_url http://cp.cloudflare.com/generate_204
+```
+
+#### Microsoft
+
+```bash
+adb shell settings put global captive_portal_https_url https://edge.microsoft.com/captiveportal/generate_204
+adb shell settings put global captive_portal_http_url http://edge.microsoft.com/captiveportal/generate_204
+```
+
+以上地址均使用 `generate_204` 路径；其中 Cloudflare 的 `cp.cloudflare.com/generate_204` 和 Microsoft 的 `edge.microsoft.com/captiveportal/generate_204` 有公开资料用于 Captive Portal / 网络连通性检测。Apple 的 Captive Portal 常用检测地址实际上是 `captive.apple.com`，并非标准的 HTTP 204 检测接口，因此 `captive.apple.com/generate_204` 更适合作为兼容性测试地址，而不是严格意义上的 Apple 官方 `generate_204` 接口。
+
 恢复默认配置：
 
-``` bash
+```bash
 adb shell settings delete global captive_portal_https_url
 adb shell settings delete global captive_portal_http_url
 ```
@@ -56,7 +80,7 @@ ADB 可使用 winget 或 scoop 安装。
 1.  打开命令提示符或 PowerShell
 2.  执行以下命令安装 ADB 和 Fastboot：
 
-``` powershell
+```powershell
 winget install Google.PlatformTools
 ```
 
@@ -64,13 +88,13 @@ winget install Google.PlatformTools
 
 检查 ADB 版本：
 
-``` bash
+```bash
 adb version
 ```
 
 检查 Fastboot 版本：
 
-``` bash
+```bash
 fastboot version
 ```
 
@@ -89,15 +113,15 @@ fastboot version
 
 3.  **在设备管理器中更新驱动**
 
-    -   将安卓设备进入 Fastboot 模式并连接电脑
-    -   打开设备管理器
-    -   找到安卓设备（通常在"未知设备"下）
-    -   右键点击设备，选择"更新驱动程序"
-    -   选择"浏览我的计算机以查找驱动程序"
-    -   点击"从计算机的可用驱动程序列表中选取"
-    -   点击"我有磁盘"并导航到解压驱动程序的文件夹
-    -   选择 `android_winusb.inf`
-        并按照提示完成安装（如果遇到未签名驱动警告请忽略）
+    - 将安卓设备进入 Fastboot 模式并连接电脑
+    - 打开设备管理器
+    - 找到安卓设备（通常在"未知设备"下）
+    - 右键点击设备，选择"更新驱动程序"
+    - 选择"浏览我的计算机以查找驱动程序"
+    - 点击"从计算机的可用驱动程序列表中选取"
+    - 点击"我有磁盘"并导航到解压驱动程序的文件夹
+    - 选择 `android_winusb.inf`
+      并按照提示完成安装（如果遇到未签名驱动警告请忽略）
 
 安装完成！
 
@@ -107,13 +131,13 @@ fastboot version
 
 Fedora 可以直接通过 dnf 安装 Android Platform Tools：
 
-``` bash
+```bash
 sudo dnf install android-tools
 ```
 
 验证：
 
-``` bash
+```bash
 adb version
 fastboot version
 ```
@@ -122,14 +146,14 @@ fastboot version
 
 安装：
 
-``` bash
+```bash
 sudo apt update
 sudo apt install adb fastboot
 ```
 
 验证：
 
-``` bash
+```bash
 adb version
 fastboot version
 ```
@@ -138,19 +162,19 @@ fastboot version
 
 安装：
 
-``` bash
+```bash
 sudo pacman -S android-tools
 ```
 
 验证：
 
-``` bash
+```bash
 adb version
 ```
 
 连接设备：
 
-``` bash
+```bash
 adb devices
 ```
 
