@@ -34,12 +34,12 @@ Ubuntu 的定制并不是把 GNOME 换成了别的东西，而是**同一套 GNO
 
 也就是说，Ubuntu 的定制主要停留在「会话」这一层。想要原版 GNOME，最安全的路子是**在登录时换一个会话**，而不是把 Ubuntu 的桌面包卸掉——包之间有复杂的依赖关系，暴力 `apt remove` 很容易把整个桌面一起带走。
 
-## 二、安装 GNOME 会话并切换
+## 二、安装完整的上游 GNOME 组件并切换
 
-确保系统里有上游的 GNOME 会话：
+Ubuntu 默认带的是经过精简/定制的 GNOME。想用接近上游原版的桌面，建议把完整的上游 GNOME 组件装齐——GNOME Shell、GNOME 会话、GNOME 设置守护进程：
 
 ```bash
-sudo apt install gnome-session
+sudo apt install gnome-shell gnome-session gnome-settings-daemon
 ```
 
 然后注销 → 在 GDM 登录界面点击自己的用户名 → 点右下角齿轮 ⚙️ → 选择 **GNOME**（注意不是 Ubuntu）→ 登录。

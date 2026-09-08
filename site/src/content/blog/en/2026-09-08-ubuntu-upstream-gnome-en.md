@@ -34,12 +34,12 @@ Ubuntu's customization didn't replace GNOME with something else — it's **the s
 
 In other words, Ubuntu's customization mostly lives at the "session" layer. To get stock GNOME, the safest route is **choosing a different session at login**, not uninstalling Ubuntu's desktop packages — those packages have tangled dependencies, and a careless `apt remove` can take the whole desktop down with them.
 
-## 2. Install the GNOME Session and Switch
+## 2. Install the Full Upstream GNOME Stack and Switch
 
-Make sure the upstream GNOME session is available:
+Ubuntu ships a trimmed-down, customized GNOME. For a desktop as close as possible to upstream, install the complete set of upstream GNOME components — GNOME Shell, the GNOME session, and the GNOME settings daemon:
 
 ```bash
-sudo apt install gnome-session
+sudo apt install gnome-shell gnome-session gnome-settings-daemon
 ```
 
 Then log out → at the GDM login screen click your username → click the gear icon ⚙️ at the bottom right → choose **GNOME** (not Ubuntu) → log in.
