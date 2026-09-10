@@ -14,21 +14,20 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "lighthouse": "bunx lighthouse http://localhost:4321/blog --output=html --output-path=./lighthouse-report.html --view",
-    "postbuild": "bunx pagefind --site dist --output-path dist/_pagefind"
+    "lighthouse": "bunx lighthouse http://localhost:4321/blog --output=html --output-path=./lighthouse-report.html --view"
   },
   "dependencies": {
     "@astrojs/mdx": "^5.0.6",
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.3",
     "astro": "^6.4.8",
+    "astro-pagefind": "^2.0.1",
     "sharp": "^0.34.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0",
     "@tailwindcss/vite": "^4.2.1",
     "daisyui": "^5.5.19",
-    "pagefind": "^1.5.2",
     "tailwindcss": "^4.2.1",
     "vitest": "^2.1.0"
   }

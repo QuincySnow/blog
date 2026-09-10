@@ -61,7 +61,7 @@ const {} = Astro.props;
 	function ensurePagefind() {
 		if (window.pagefind) return Promise.resolve(window.pagefind);
 		if (window.__pagefindLoading) return window.__pagefindLoading;
-		var url = window.location.origin + window.__BASE_PATH__ + '/_pagefind/pagefind.js';
+		var url = window.location.origin + window.__BASE_PATH__ + '/pagefind/pagefind.js';
 		var s = document.createElement('script');
 		s.type = 'module';
 		s.textContent = 'import * as _pf from "' + url + '"; window.pagefind = _pf;';

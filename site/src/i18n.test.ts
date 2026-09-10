@@ -13,14 +13,14 @@ describe('i18n', () => {
 		expect(DEFAULT_LANG).toBe('zh');
 	});
 
-	it('has en and zh top-level keys with nav, blog, theme, etc.', () => {
+	it('has en and zh top-level keys with nav, posts, theme, etc.', () => {
 		expect(i18n.en).toBeDefined();
 		expect(i18n.zh).toBeDefined();
 		expect(i18n.en.nav.home).toBe('Home');
 		expect(i18n.zh.nav.home).toBe('首页');
 		expect(i18n.en.theme.dark).toBe('Dark');
 		expect(i18n.zh.theme.dark).toBe('深色');
-		expect(i18n.en.blog.documentTitle).toContain('QuincySnow');
+		expect(i18n.en.posts.documentTitle).toContain('QuincySnow');
 		expect(i18n.zh.dateLocale).toBe('zh-CN');
 		expect(i18n.en.dateLocale).toBe('en-US');
 	});
