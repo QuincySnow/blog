@@ -140,39 +140,67 @@ sudo parted /dev/nvme1n1
 
 > ⚠️ **缩小分区是破坏性操作，先备份重要数据。** 分区号和边界每个机器都不一样，务必用 `print free` 的实际输出替换上面的占位符，不要照抄。
 
-新分区建好后，把它格式化成 swap 并启用：
+新分区建好后，把它格式化成 swap：
 
 ```bash
 sudo mkswap /dev/nvme1n1p5
-sudo swapon /dev/nvme1n1p5
-swapon --show
 ```
 
-拿到新分区的 UUID：
+到此为止，**先不要 `swapon`、也不要写 `/etc/fstab`**——启用 swap、写 fstab、以及处理旧的 `/swap.img`，都交给下一节的脚本做（职责划分见 2.4）。
+
+> 如果你不打算用 `ubuntu-gnome-hibernate`（比如想完全手动），那就自己补齐：`sudo swapon /dev/nvme1n1p5`，取 `lsblk -f /dev/nvme1n1p5` 的 UUID 写进 `/etc/fstab`（`UUID=<swap分区UUID>  none  swap  sw  0  0`），并把原来 `/swap.img` 那行删掉。
+
+### 2.3 下载并运行项目脚本
+
+先把项目拿到本地（脚本没有发布到 release，只能 clone）：
 
 ```bash
-lsblk -f /dev/nvme1n1p5
+git clone https://github.com/jdtanner/ubuntu-gnome-hibernate
+cd ubuntu-gnome-hibernate
 ```
 
-为了重启后自动挂载，写进 `/etc/fstab`（用自己的 UUID 替换）：
-
-```conf
-UUID=<swap分区UUID>  none  swap  sw  0  0
-```
-
-如果这台机器原来用的是 `/swap.img`，现在应该把那一行从 fstab 里去掉了（`ubuntu-gnome-hibernate` 的主脚本也会替你做这件事）——后面两套 swap 同时存在会让 resume 变得难以预测。
-
-### 2.3 剩下的交给脚本
+然后跑诊断脚本，确认它认出了你刚建的 swap 分区：
 
 ```bash
-sudo bash hibernate-diagnose.sh          # 记下 SWAP_PARTITION 与 SWAP_UUID
-# 编辑 complete-hibernate-setup-ubuntu-2604-gnome.sh 顶部两个常量
+sudo bash hibernate-diagnose.sh
+```
+
+重点看 `=== Swap partition UUID (blkid) ===` 那一段——里面的设备和 UUID 就是要填进主脚本的两个值：
+
+```bash
+sudo nano complete-hibernate-setup-ubuntu-2604-gnome.sh
+```
+
+```bash
+SWAP_PARTITION="/dev/你的swap分区"
+SWAP_UUID="你的swap分区UUID"
+```
+
+确认改对了再执行（脚本会验证 UUID，不匹配会直接退出，不会写错）：
+
+```bash
+chmod +x complete-hibernate-setup-ubuntu-2604-gnome.sh
 sudo ./complete-hibernate-setup-ubuntu-2604-gnome.sh
 sudo reboot
-sudo systemctl hibernate                 # 测试
+sudo systemctl hibernate                 # 重启后测试
 ```
 
-### 2.4 为什么我还是用了 swapfile
+### 2.4 职责划分：fstab 交给脚本，别自己写
+
+这里容易踩坑，说清楚：
+
+| 步骤 | 你自己做 | 脚本做 |
+| --- | --- | --- |
+| 建分区、`mkswap` 格式化 | ✅ | ❌ |
+| 启用 swap（`swapon`） | ❌ | ✅ |
+| 写 `/etc/fstab` | ❌ | ✅ |
+| 处理旧的 `/swap.img` | ❌ | ✅ |
+
+也就是说，**2.2 做到 `mkswap` 就可以停了**：不用 `swapon`、不用写 `/etc/fstab`、也不用自己去动 `/swap.img` 那行。这些都是脚本的活，你手动做了反而会在 fstab 里留下重复条目。
+
+如果想自己完全手动（不走项目），那就反过来——自己写完 `swapon` / fstab / 删 `/swap.img`，**不跑主脚本**；两者不要混着来。
+
+### 2.5 为什么我还是用了 swapfile
 
 上面做法 A 里那句「缩小正在使用的根分区需要从 Live USB 启动」，就是我没走这条路的原因：**这台上没有空闲分区，要腾 32 GiB 就得离线缩根分区**，一次性风险比收益大。既然 swapfile 能实现完全一样的效果，我选择了不重新分区。
 
@@ -355,6 +383,13 @@ gnome-extensions enable hibernate-status@dromi
 
 ### 使用方法
 
+先把项目拿到本地（脚本没有发布到 release，只能 clone）：
+
+```bash
+git clone https://github.com/jdtanner/ubuntu-gnome-hibernate
+cd ubuntu-gnome-hibernate
+```
+
 ```bash
 # 1. 先跑诊断脚本，记下 swap 分区名和 UUID
 sudo bash hibernate-diagnose.sh
@@ -375,7 +410,7 @@ sudo systemctl hibernate
 
 诊断脚本比你想象的简单：就只输出 RAM、`swapon --show`、`lsblk`、`blkid | grep swap`、当前 GRUB 参数、`mokutil --sb-state`、内核版本这七项，没有别的。
 
-可选的合盖休眠与 GNOME 按钮：
+可选的合盖休眠与 GNOME 按钮（同样在 clone 下来的目录里执行）：
 
 ```bash
 sudo ./configure-lid-hibernate.sh             # 合盖休眠（会重启 logind，当前会话会退出）

@@ -140,39 +140,67 @@ sudo parted /dev/nvme1n1
 
 > ⚠️ **Shrinking partitions is destructive — back up important data first.** Partition numbers and boundaries differ per machine; replace the placeholders with your actual `print free` output, don't copy mine.
 
-Format the new partition as swap and enable it:
+Format the new partition as swap:
 
 ```bash
 sudo mkswap /dev/nvme1n1p5
-sudo swapon /dev/nvme1n1p5
-swapon --show
 ```
 
-Get its UUID:
+Stop there — **don't run `swapon`, and don't write `/etc/fstab` yet**. Enabling swap, writing fstab, and handling the old `/swap.img` are all handled by the script in the next section (see 2.4 for the split of responsibilities).
+
+> If you're not using `ubuntu-gnome-hibernate` (i.e. going fully manual), do it yourself: `sudo swapon /dev/nvme1n1p5`, take the UUID from `lsblk -f /dev/nvme1n1p5` and add it to `/etc/fstab` (`UUID=<swap partition UUID>  none  swap  sw  0  0`), then delete the old `/swap.img` line.
+
+### 2.3 Download and run the project scripts
+
+Fetch the project first (the scripts aren't published as releases, so clone is the only way):
 
 ```bash
-lsblk -f /dev/nvme1n1p5
+git clone https://github.com/jdtanner/ubuntu-gnome-hibernate
+cd ubuntu-gnome-hibernate
 ```
 
-For it to mount automatically after reboot, add it to `/etc/fstab` (substitute your UUID):
-
-```conf
-UUID=<swap partition UUID>  none  swap  sw  0  0
-```
-
-If this machine previously used `/swap.img`, remove that line from fstab now (`ubuntu-gnome-hibernate`'s main script will do it for you too) — having both swaps active makes resume unpredictable.
-
-### 2.3 Let the script do the rest
+Then run the diagnostic to confirm it sees the swap partition you just created:
 
 ```bash
-sudo bash hibernate-diagnose.sh          # note SWAP_PARTITION and SWAP_UUID
-# edit the two constants at the top of complete-hibernate-setup-ubuntu-2604-gnome.sh
+sudo bash hibernate-diagnose.sh
+```
+
+Look at the `=== Swap partition UUID (blkid) ===` section — the device and UUID there are the two values you put into the main script:
+
+```bash
+sudo nano complete-hibernate-setup-ubuntu-2604-gnome.sh
+```
+
+```bash
+SWAP_PARTITION="/dev/your-swap-partition"
+SWAP_UUID="your-swap-partition-uuid"
+```
+
+Only run it once those are correct (the script verifies the UUID and exits rather than writing anything wrong):
+
+```bash
+chmod +x complete-hibernate-setup-ubuntu-2604-gnome.sh
 sudo ./complete-hibernate-setup-ubuntu-2604-gnome.sh
 sudo reboot
-sudo systemctl hibernate                 # test
+sudo systemctl hibernate                 # test after reboot
 ```
 
-### 2.4 Why I used a swapfile anyway
+### 2.4 Who does what: let the script handle fstab
+
+This is where people trip up, so to be explicit:
+
+| Step | You | The script |
+| --- | --- | --- |
+| Create the partition, `mkswap` it | ✅ | ❌ |
+| Enable swap (`swapon`) | ❌ | ✅ |
+| Write `/etc/fstab` | ❌ | ✅ |
+| Deal with the old `/swap.img` | ❌ | ✅ |
+
+In other words, **stop after `mkswap` in 2.2**: don't run `swapon`, don't write `/etc/fstab`, and don't touch the `/swap.img` line yourself. Those are the script's job, and doing them by hand just leaves duplicate entries in fstab.
+
+If you'd rather do everything manually (no project), flip it around — write `swapon` / fstab / delete `/swap.img` yourself and **don't run the main script**. Don't mix the two.
+
+### 2.5 Why I used a swapfile anyway
 
 That line in Approach A — "shrinking an in-use root partition requires booting from a live USB" — is exactly why I didn't take this route: **this machine has no free space, so freeing 32 GiB meant shrinking root offline**, and the one-shot risk outweighed the benefit. Since a swapfile achieves exactly the same result, I chose not to repartition.
 
@@ -355,6 +383,13 @@ It recognizes exactly the layering I broke out above: **Hibernate isn't a toggle
 
 ### How to use it
 
+Fetch the project first (the scripts aren't published as releases, so clone is the only way):
+
+```bash
+git clone https://github.com/jdtanner/ubuntu-gnome-hibernate
+cd ubuntu-gnome-hibernate
+```
+
 ```bash
 # 1. run the diagnostic first, note the swap partition and UUID
 sudo bash hibernate-diagnose.sh
@@ -376,7 +411,7 @@ What the main script actually does (I read its source): verifies the swap partit
 
 The diagnostic script is simpler than you'd expect: it only prints RAM, `swapon --show`, `lsblk`, `blkid | grep swap`, the current GRUB params, `mokutil --sb-state`, and the kernel version. Nothing else.
 
-Optional lid-close and power-menu button:
+Optional lid-close and power-menu button (run these from the cloned directory too):
 
 ```bash
 sudo ./configure-lid-hibernate.sh             # lid → hibernate (restarts logind; your session ends)
