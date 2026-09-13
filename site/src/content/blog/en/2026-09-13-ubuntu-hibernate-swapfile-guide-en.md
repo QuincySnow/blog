@@ -18,7 +18,9 @@ Start with the conclusion: **if you just want hibernate working with minimum fus
 
 If, like most Ubuntu users, you're on the default **swapfile** and don't want to repartition just for hibernate, you have to compute `resume_offset` yourself — that's what sections 4–8 cover, and where most tutorials get it wrong.
 
-Measured on **Ubuntu 26.04.1 LTS + GNOME Shell 50.1 + kernel 7.0.0-31**.
+Measured on **Ubuntu 26.04.1 LTS + GNOME Shell 50.1 + kernel 7.0.0-31**. The project's main scripts also work on 24.04 / 24.10 / 25.10 with minor tweaks, but its GNOME extension targets GNOME 50 only (for older GNOME, use the upstream [Hibernate Status Button](https://extensions.gnome.org/extension/755/hibernate-status-button/)).
+
+Section 10 at the end has a "where to look when it doesn't work" checklist — start there if the setup doesn't take on the first try.
 
 ---
 
@@ -200,7 +202,41 @@ In other words, **stop after `mkswap` in 2.2**: don't run `swapon`, don't write 
 
 If you'd rather do everything manually (no project), flip it around — write `swapon` / fstab / delete `/swap.img` yourself and **don't run the main script**. Don't mix the two.
 
-### 2.5 Why I used a swapfile anyway
+### 2.5 Optional: lid close, power-menu button, uninstall
+
+Hibernate works without these, but you probably want them (run from the cloned directory):
+
+```bash
+# lid close → hibernate (restarts logind; your session ends, save your work)
+chmod +x configure-lid-hibernate.sh
+sudo ./configure-lid-hibernate.sh
+
+# add a Hibernate button to the power menu
+cd hibernate-status-gnome50
+chmod +x install.sh
+./install.sh
+```
+
+After installing the extension you must **log out and back in** (or reboot) before the button appears in the power menu.
+
+To undo everything (the project's README provides the full uninstall):
+
+```bash
+sudo rm /etc/systemd/system/systemd-suspend.service
+sudo rm /etc/polkit-1/rules.d/10-enable-hibernate.rules
+sudo rm /etc/polkit-1/rules.d/11-disable-suspend.rules
+sudo rm /etc/systemd/sleep.conf
+sudo rm /etc/systemd/logind.conf.d/hibernate-lid.conf
+sudo rm /etc/initramfs-tools/conf.d/resume
+sudo update-initramfs -u
+sudo cp /etc/default/grub.backup.<timestamp> /etc/default/grub   # the backup the script made
+sudo update-grub
+sudo systemctl daemon-reload
+sudo systemctl restart systemd-logind polkit
+# re-add the fstab line if you want the swapfile back
+```
+
+### 2.6 Why I used a swapfile anyway
 
 That line in Approach A — "shrinking an in-use root partition requires booting from a live USB" — is exactly why I didn't take this route: **this machine has no free space, so freeing 32 GiB meant shrinking root offline**, and the one-shot risk outweighed the benefit. Since a swapfile achieves exactly the same result, I chose not to repartition.
 
@@ -474,13 +510,46 @@ Side-by-side:
 
 Also, the project currently has 2 stars and 1 commit, so I wouldn't treat it as a mature system-level dependency — its value is the **GNOME 50 extension and diagnostic thinking**; for the core hibernate config on a swapfile, the approach above is actually more complete.
 
-## 10. A recommendation: don't redirect Suspend to Hibernate globally
+## 10. Troubleshooting: where to look when it doesn't work
+
+When this chain breaks the symptoms are vague (boots straight to the desktop with no restore, or reports hibernate unsupported). Check these in order and you'll usually pin it down:
+
+```bash
+# 1. did the kernel actually get the resume params? (partition: resume=UUID=; swapfile adds resume_offset=)
+cat /proc/cmdline | grep resume
+
+# 2. is swap actually enabled, and the right type?
+swapon --show
+
+# 3. the two key values: resume device + offset
+cat /sys/power/resume
+cat /sys/power/resume_offset
+
+# 4. is the symlink there? (project route only)
+ls -la /etc/systemd/system/systemd-suspend.service
+
+# 5. logs — the most informative step
+journalctl -b | grep -iE '(hibernate|suspend)' | tail -30
+```
+
+Typical symptoms and likely causes:
+
+| Symptom | Likely cause |
+| --- | --- |
+| `Sleep verb "hibernate" not supported` | Secure Boot still enabled |
+| Powers off, but boots straight to a fresh desktop | wrong `resume`/`resume_offset`, or initramfs not rebuilt |
+| Only Suspend in the power menu, no Hibernate | extension missing, or installed without logging out; on the project route, Suspend being hidden by polkit is expected |
+| Boot hangs on the resume screen for a long time | swapfile `resume_offset` is stale (file moved or fragmented) |
+
+> A stale `resume_offset` is easy to overlook: if the swapfile is ever recreated or defragmented, its physical offset changes and you must recompute it with `filefrag -v`.
+
+## 11. A recommendation: don't redirect Suspend to Hibernate globally
 
 The project's README notes that it symlinks `systemd-suspend.service` → `systemd-hibernate.service`, which turns **every** suspend call (including GNOME lid-close sleep and keyboard shortcuts) into Hibernate.
 
 If your goal is just "a Hibernate button in the power menu plus automatic hibernation at night", **there's no need** for that: Suspend resumes in a second, Hibernate writes to disk and powers off. Turning every lid close into a disk write makes daily use worse. If you want to save power, configure "hibernate some time after lid close" instead of replacing Suspend wholesale.
 
-## 11. Final setup
+## 12. Final setup
 
 The end state on this machine:
 
@@ -508,6 +577,7 @@ Key takeaways:
 7. GNOME 50 has no Hibernate button by default — add one with `hibernate-power-menu@arnakazim` (community) or the project's own `hibernate-status@dromi`.
 8. `ubuntu-gnome-hibernate` only supports a swap partition; **swapfile users should not run its main script**, only borrow the extension and helper scripts.
 9. Don't casually redirect all Suspend calls to Hibernate.
+10. If it doesn't work, start with the section 10 checklist: `/proc/cmdline`, `swapon --show`, `/sys/power/resume*`, `journalctl -b | grep -iE '(hibernate|suspend)'`.
 
 ---
 

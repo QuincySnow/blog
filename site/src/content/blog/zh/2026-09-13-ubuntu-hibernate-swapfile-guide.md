@@ -18,7 +18,9 @@ Windows 上的「睡眠」和「休眠」是两个不同的东西，Linux 上对
 
 如果你和大多数 Ubuntu 用户一样是默认的 **swapfile**，又不想为了休眠重新分区，那就得自己算 `resume_offset`——这是本文第四～八节详细展开的部分，也是很多教程最容易讲错的地方。
 
-本文基于 **Ubuntu 26.04.1 LTS + GNOME Shell 50.1 + 内核 7.0.0-31** 实测。
+本文基于 **Ubuntu 26.04.1 LTS + GNOME Shell 50.1 + 内核 7.0.0-31** 实测。项目的主脚本在 24.04 / 24.10 / 25.10 上微调后也能用，但它的 GNOME 扩展只针对 GNOME 50（更旧的 GNOME 用上游的 [Hibernate Status Button](https://extensions.gnome.org/extension/755/hibernate-status-button/)）。
+
+文末第十节给了「不工作的时候看哪里」的排查清单，配置完直接跑不起来的话可以先翻那里。
 
 ---
 
@@ -200,7 +202,41 @@ sudo systemctl hibernate                 # 重启后测试
 
 如果想自己完全手动（不走项目），那就反过来——自己写完 `swapon` / fstab / 删 `/swap.img`，**不跑主脚本**；两者不要混着来。
 
-### 2.5 为什么我还是用了 swapfile
+### 2.5 可选：合盖休眠、电源菜单按钮、卸载
+
+这两步不做也能休眠，但多半是你想要的（在 clone 下来的目录里执行）：
+
+```bash
+# 合盖休眠（会重启 logind，当前会话会退出，先存盘）
+chmod +x configure-lid-hibernate.sh
+sudo ./configure-lid-hibernate.sh
+
+# 电源菜单加「休眠」按钮
+cd hibernate-status-gnome50
+chmod +x install.sh
+./install.sh
+```
+
+装完扩展后**要注销再登录**（或重启），按钮才会出现在电源菜单里。
+
+想彻底回滚（项目 README 给了完整卸载步骤）：
+
+```bash
+sudo rm /etc/systemd/system/systemd-suspend.service
+sudo rm /etc/polkit-1/rules.d/10-enable-hibernate.rules
+sudo rm /etc/polkit-1/rules.d/11-disable-suspend.rules
+sudo rm /etc/systemd/sleep.conf
+sudo rm /etc/systemd/logind.conf.d/hibernate-lid.conf
+sudo rm /etc/initramfs-tools/conf.d/resume
+sudo update-initramfs -u
+sudo cp /etc/default/grub.backup.<时间戳> /etc/default/grub   # 用脚本生成的备份
+sudo update-grub
+sudo systemctl daemon-reload
+sudo systemctl restart systemd-logind polkit
+# 想恢复 swapfile 就再加回 fstab 那行
+```
+
+### 2.6 为什么我还是用了 swapfile
 
 上面做法 A 里那句「缩小正在使用的根分区需要从 Live USB 启动」，就是我没走这条路的原因：**这台上没有空闲分区，要腾 32 GiB 就得离线缩根分区**，一次性风险比收益大。既然 swapfile 能实现完全一样的效果，我选择了不重新分区。
 
@@ -473,13 +509,46 @@ cd hibernate-status-gnome50 && ./install.sh  # 电源菜单加 Hibernate 按钮�
 
 另外这个项目目前只有 2 stars、1 个 commit，我也不会把它当成成熟的系统级方案来依赖——它的价值在于**GNOME 50 扩展和诊断思路**，核心 hibernate 配置部分，swapfile 场景下本文这套反而更完整。
 
-## 十、一个建议：别把 Suspend 全局改成 Hibernate
+## 十、排查：不工作的时候看哪里
+
+这套东西出了问题，症状往往很含糊（开机直接进系统没恢复、或者报不支持休眠）。按下面顺序看，基本能定位：
+
+```bash
+# 1. 内核到底有没有拿到 resume 参数（分区方案应有 resume=UUID=，swapfile 还要 resume_offset=）
+cat /proc/cmdline | grep resume
+
+# 2. swap 是不是真的启用了、类型对不对
+swapon --show
+
+# 3. 两条关键状态：resume 设备号 + offset
+cat /sys/power/resume
+cat /sys/power/resume_offset
+
+# 4. 软链接在不在（项目方案特有）
+ls -la /etc/systemd/system/systemd-suspend.service
+
+# 5. 看日志，这一步信息最多
+journalctl -b | grep -iE '(hibernate|suspend)' | tail -30
+```
+
+几个典型症状：
+
+| 症状 | 大概原因 |
+| --- | --- |
+| 报 `Sleep verb "hibernate" not supported` | Secure Boot 没关 |
+| 执行后关机了，开机直接重进桌面没恢复 | `resume`/`resume_offset` 不对，或没重建 initramfs |
+| 电源菜单里只有 Suspend 没有 Hibernate | 扩展没装、或装了没注销重登；项目方案下 Suspend 被 polkit 隐藏是正常的 |
+| 开机卡在恢复界面很久 | swapfile 的 `resume_offset` 过时（文件被移动/碎片化过） |
+
+> `resume_offset` 过时是个容易忽略的坑：swapfile 一旦被重新创建或碎片整理，物理偏移就变了，必须重新用 `filefrag -v` 算一遍。
+
+## 十一、一个建议：别把 Suspend 全局改成 Hibernate
 
 该项目的 README 提到，它会建立 `systemd-suspend.service` → `systemd-hibernate.service` 的软链接，从而让**所有** suspend 调用（包括 GNOME 合盖睡眠、快捷键）都变成 Hibernate。
 
 如果你的目标只是「电源菜单有 Hibernate 按钮 + 晚上自动休眠」，**没必要**这么做：Suspend 秒回、Hibernate 要写盘再关机，日常合盖直接变写盘会让体验变差。想省电可以只配「合盖后过一段时间再 Hibernate」，而不是把 Suspend 整个替换掉。
 
-## 十一、最终配置总结
+## 十二、最终配置总结
 
 最终这台机器的形态：
 
@@ -507,3 +576,4 @@ Ubuntu 26.04.1 LTS + GNOME Shell 50.1 + kernel 7.0.0-31
 7. GNOME 50 默认没有 Hibernate 按钮，用 `hibernate-power-menu@arnakazim`（社区）或项目自带的 `hibernate-status@dromi` 补上。
 8. `ubuntu-gnome-hibernate` 只支持 swap partition；**swapfile 用户不要跑它的主脚本**，只借它的扩展与辅助脚本。
 9. 不要轻易把 Suspend 全局重定向到 Hibernate。
+10. 不工作了先看第十节的排查清单：`/proc/cmdline`、`swapon --show`、`/sys/power/resume*`、`journalctl -b | grep -iE '(hibernate|suspend)'`。
