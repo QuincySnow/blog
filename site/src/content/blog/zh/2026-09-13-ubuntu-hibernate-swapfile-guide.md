@@ -236,6 +236,8 @@ sudo systemctl restart systemd-logind polkit
 # 想恢复 swapfile 就再加回 fstab 那行
 ```
 
+**如果你想要更多电源选项**：除了单纯加个 Hibernate 按钮，还有个 [Power Off Options](https://github.com/Tiago-Silva/power-off-options) 扩展，它不是只加 Hibernate，而是给关机界面加上 Hybrid Sleep、Suspend Then Hibernate、Turn Off Screen、Soft Reboot、Restart to BIOS、自定义命令等一整套。如果你以后想做「Suspend 一段时间 → 没人动 → 自动 Hibernate」这种玩法，它比单纯的 Hibernate 按钮更好用。
+
 ### 2.6 为什么我还是用了 swapfile
 
 上面做法 A 里那句「缩小正在使用的根分区需要从 Live USB 启动」，就是我没走这条路的原因：**这台上没有空闲分区，要腾 32 GiB 就得离线缩根分区**，一次性风险比收益大。既然 swapfile 能实现完全一样的效果，我选择了不重新分区。
@@ -270,13 +272,22 @@ Ubuntu 现在的默认是 **swapfile**（`/swap.img`）。但 swapfile 有个陷
 sudo filefrag -v /swap.img
 ```
 
-输出里的 `physical_offset` 第一行的块号，乘以块大小（ext4 通常是 4096 字节），就是 `resume_offset`。我这台机器算出来是：
+输出里 `physical_offset` 列**第一行的数字，直接就是 `resume_offset`**，不需要乘任何块大小。
+
+这点最容易搞错，原因有两个：
+
+- 内核文档说的是 `resume_offset` 以 **`PAGE_SIZE` 为单位**（即块号，不是字节），而 `filefrag` 的 `physical_offset` 列打印出来时已经除过块大小（e2fsprogs 源码里是 `fe_physical >> blk_shift`），所以两者单位一致，**直接用**。
+- 如果把它当成字节、或又乘一次 4096，得到的就是错误的值（差 4096 倍），**开机时会恢复失败**。
+
+我这台机器上这个值是：
 
 ```text
 resume_offset=42401792
 ```
 
-验证一下方式：这个值正好等于「第一个物理块号 × 4096」，换成字节约 162 GiB 位置——说明它在根分区 `/dev/nvme1n1p4` 上。
+换算一下就是文件在根分区上大约 161.75 GiB 处（`42401792 × 4096`），对 604.5 GiB 的 `/dev/nvme1n1p4` 来说是合理位置。
+
+> 注：内核文档描述的做法是“用能用 FIBMAP 的工具定位 swap 头的偏移”，并且要求 swapfile 本身**不能有空洞**（不能是稀疏文件）。`filefrag` 输出的块号就是这里要的值；如果 `filefrag` 报 `FIBMAP requires root privileges`，记得前面加 `sudo`。
 
 确认根文件系统的 UUID：
 
@@ -542,6 +553,13 @@ journalctl -b | grep -iE '(hibernate|suspend)' | tail -30
 
 > `resume_offset` 过时是个容易忽略的坑：swapfile 一旦被重新创建或碎片整理，物理偏移就变了，必须重新用 `filefrag -v` 算一遍。
 
+另一个坑是**空洞（稀疏文件）**：内核要求 swapfile 不能有空洞。检查一下：
+
+```bash
+sudo filefrag -v /swap.img | head -20   # 看 extent 是否连续
+cat /proc/swaps                          # 确认 swap 已启用且大小符合预期
+```
+
 ## 十一、一个建议：别把 Suspend 全局改成 Hibernate
 
 该项目的 README 提到，它会建立 `systemd-suspend.service` → `systemd-hibernate.service` 的软链接，从而让**所有** suspend 调用（包括 GNOME 合盖睡眠、快捷键）都变成 Hibernate。
@@ -570,7 +588,7 @@ Ubuntu 26.04.1 LTS + GNOME Shell 50.1 + kernel 7.0.0-31
 1. **推荐路线就两步：swap 分区 + 关 Secure Boot**，然后一条 [`ubuntu-gnome-hibernate`](https://github.com/jdtanner/ubuntu-gnome-hibernate) 脚本收尾。别手敲一堆命令。
 2. 有 swap 分区就不用管 `resume_offset`，那是 swapfile 才需要的东西。
 3. Hibernate ≠ Suspend。前者写盘后断电，后者内存继续供电。
-4. 只能用 swapfile 时，关键是 **`resume_offset`**，它必须是文件的**物理偏移**，用 `filefrag -v` 算。
+4. 只能用 swapfile 时，关键是 **`resume_offset`**：用 `filefrag -v` 取 `physical_offset` **第一行的数字直接用**（单位是 `PAGE_SIZE`，不是字节，不要再乘 4096）。
 5. Ubuntu 26.04 用 **dracut**，需要显式加入 `resume` 模块并写 `/etc/cmdline.d/20-resume.conf`。
 6. 校验用 `/sys/power/resume` 与 `/sys/power/resume_offset`，必须和内核参数一致。
 7. GNOME 50 默认没有 Hibernate 按钮，用 `hibernate-power-menu@arnakazim`（社区）或项目自带的 `hibernate-status@dromi` 补上。

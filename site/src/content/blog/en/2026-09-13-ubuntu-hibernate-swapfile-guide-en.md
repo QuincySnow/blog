@@ -236,6 +236,8 @@ sudo systemctl restart systemd-logind polkit
 # re-add the fstab line if you want the swapfile back
 ```
 
+**If you want more power options**: instead of a plain Hibernate button there's the [Power Off Options](https://github.com/Tiago-Silva/power-off-options) extension, which adds a whole set to the power dialog — Hybrid Sleep, Suspend Then Hibernate, Turn Off Screen, Soft Reboot, Restart to BIOS, custom commands. If you later want "suspend for a while → if untouched, hibernate", it's a better fit than a bare Hibernate button.
+
 ### 2.6 Why I used a swapfile anyway
 
 That line in Approach A — "shrinking an in-use root partition requires booting from a live USB" — is exactly why I didn't take this route: **this machine has no free space, so freeing 32 GiB meant shrinking root offline**, and the one-shot risk outweighed the benefit. Since a swapfile achieves exactly the same result, I chose not to repartition.
@@ -270,13 +272,22 @@ For a swapfile on ext4, use `filefrag` to get the first physical block:
 sudo filefrag -v /swap.img
 ```
 
-The `physical_offset` block number on the first line, multiplied by the block size (4096 bytes on ext4), is `resume_offset`. On my machine that came out to:
+The number on the **first row of the `physical_offset` column is `resume_offset` directly** — do not multiply it by the block size.
+
+This is the easiest thing to get wrong, for two reasons:
+
+- The kernel documentation says `resume_offset` is in **`PAGE_SIZE` units** (block numbers, not bytes), and `filefrag`'s `physical_offset` column is already divided by the block size (in e2fsprogs it's `fe_physical >> blk_shift`), so the two units match — **use it as-is**.
+- Treating it as bytes, or multiplying by 4096 again, gives a wrong value (off by 4096×) and **the resume will fail at boot**.
+
+On my machine that value is:
 
 ```text
 resume_offset=42401792
 ```
 
-As a sanity check: 42401792 × 4096 ≈ 162 GiB into the root partition `/dev/nvme1n1p4`, which is plausible for its layout.
+In context, that's roughly 161.75 GiB into the root partition (`42401792 × 4096`), a plausible location in the 604.5 GiB `/dev/nvme1n1p4`.
+
+> Note: the kernel documentation describes this as "use a tool that can bmap the swap file to locate its swap header offset", and it requires the swapfile to have **no holes** (it must not be sparse). The block number `filefrag` prints is exactly the value you want; if `filefrag` reports `FIBMAP requires root privileges`, add `sudo`.
 
 Confirm the root filesystem UUID:
 
@@ -543,6 +554,13 @@ Typical symptoms and likely causes:
 
 > A stale `resume_offset` is easy to overlook: if the swapfile is ever recreated or defragmented, its physical offset changes and you must recompute it with `filefrag -v`.
 
+Another gotcha is **holes (a sparse file)**: the kernel requires the swapfile to have no holes. Check:
+
+```bash
+sudo filefrag -v /swap.img | head -20   # is the extent layout contiguous?
+cat /proc/swaps                          # is swap enabled, and the size what you expect?
+```
+
 ## 11. A recommendation: don't redirect Suspend to Hibernate globally
 
 The project's README notes that it symlinks `systemd-suspend.service` → `systemd-hibernate.service`, which turns **every** suspend call (including GNOME lid-close sleep and keyboard shortcuts) into Hibernate.
@@ -571,7 +589,7 @@ Key takeaways:
 1. **The recommended route is two steps: swap partition + Secure Boot off**, then one [`ubuntu-gnome-hibernate`](https://github.com/jdtanner/ubuntu-gnome-hibernate) script to finish. Don't hand-type the commands.
 2. With a swap partition you never deal with `resume_offset` — that's a swapfile-only concern.
 3. Hibernate ≠ Suspend. The former writes to disk and powers off; the latter keeps RAM powered.
-4. If you're stuck with a swapfile, **`resume_offset`** is the crux — it must be the file's **physical** offset, computed with `filefrag -v`.
+4. If you're stuck with a swapfile, **`resume_offset`** is the crux: take the **first `physical_offset` number from `filefrag -v` and use it directly** (the unit is `PAGE_SIZE`, not bytes — do not multiply by 4096 again).
 5. Ubuntu 26.04 uses **dracut**; you must add the `resume` module and write `/etc/cmdline.d/20-resume.conf`.
 6. Verify with `/sys/power/resume` and `/sys/power/resume_offset`; they must match the kernel parameters.
 7. GNOME 50 has no Hibernate button by default — add one with `hibernate-power-menu@arnakazim` (community) or the project's own `hibernate-status@dromi`.
