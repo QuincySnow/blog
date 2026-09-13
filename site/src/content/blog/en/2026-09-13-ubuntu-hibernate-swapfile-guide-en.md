@@ -272,14 +272,22 @@ For a swapfile on ext4, use `filefrag` to get the first physical block:
 sudo filefrag -v /swap.img
 ```
 
-The number on the **first row of the `physical_offset` column is `resume_offset` directly** — do not multiply it by the block size.
+The number on the **first row of the `physical_offset` column is `resume_offset` directly** — do not multiply it by the block size. Here's the real output from my machine:
 
-This is the easiest thing to get wrong, for two reasons:
+```text
+$ sudo filefrag -v /swap.img
+Filesystem type is: ef53
+File size of /swap.img is 34359738368 (8388608 blocks of 4096 bytes)
+ ext:     logical_offset:        physical_offset: length:   expected: flags:
+   0:        0..       0:   42401792..  42401792:      1:
+   1:        1..   65535:   42401793..  42467327:  65535:             unwritten
+   2:    65536..  557055:   42500096..  42991615: 491520:   42467328: unwritten
+   ...
+  22:  8192000.. 8388607:   62947328..  63143935: 196608:   62914560: last,unwritten,eof
+/swap.img: 22 extents found
+```
 
-- The kernel documentation says `resume_offset` is in **`PAGE_SIZE` units** (block numbers, not bytes), and `filefrag`'s `physical_offset` column is already divided by the block size (in e2fsprogs it's `fe_physical >> blk_shift`), so the two units match — **use it as-is**.
-- Treating it as bytes, or multiplying by 4096 again, gives a wrong value (off by 4096×) and **the resume will fail at boot**.
-
-On my machine that value is:
+So take the starting `physical_offset` of row 0:
 
 ```text
 resume_offset=42401792
@@ -287,7 +295,22 @@ resume_offset=42401792
 
 In context, that's roughly 161.75 GiB into the root partition (`42401792 × 4096`), a plausible location in the 604.5 GiB `/dev/nvme1n1p4`.
 
-> Note: the kernel documentation describes this as "use a tool that can bmap the swap file to locate its swap header offset", and it requires the swapfile to have **no holes** (it must not be sparse). The block number `filefrag` prints is exactly the value you want; if `filefrag` reports `FIBMAP requires root privileges`, add `sudo`.
+This is the easiest thing to get wrong, for two reasons:
+
+- The kernel documentation says `resume_offset` is in **`PAGE_SIZE` units** (block numbers, not bytes), and `filefrag`'s `physical_offset` column is already divided by the block size (in e2fsprogs it's `fe_physical >> blk_shift`), so the two units match — **use it as-is**.
+- Treating it as bytes, or multiplying by 4096 again, gives a wrong value (off by 4096×) and **the resume will fail at boot**.
+
+> Why `sudo` is required: `filefrag` uses FIEMAP but needs the underlying physical mapping, and as a normal user it reports `FIBMAP requires root privileges`.
+
+On the subject of "holes", two different things get conflated. In the output above every row except row 0 carries the `unwritten` flag, and `physical_offset` is not contiguous (`42467327` jumps straight to `42500096`) — that's the normal shape of a `fallocate`-preallocated file, **not a hole**, and the kernel accepts it (proof: `cat /proc/swaps` on this machine shows swap enabled and working).
+
+What `swapon` actually rejects is an **unallocated hole** (`man swapon`: "Files with holes" — e.g. a sparse file made by `cp` or `truncate`). So create the swapfile with `fallocate`, not `dd` or `truncate`:
+
+```bash
+sudo fallocate -l 32G /swap.img    # preallocated, no holes
+sudo chmod 600 /swap.img
+sudo mkswap /swap.img
+```
 
 Confirm the root filesystem UUID:
 
@@ -554,10 +577,10 @@ Typical symptoms and likely causes:
 
 > A stale `resume_offset` is easy to overlook: if the swapfile is ever recreated or defragmented, its physical offset changes and you must recompute it with `filefrag -v`.
 
-Another gotcha is **holes (a sparse file)**: the kernel requires the swapfile to have no holes. Check:
+Another commonly confused point is **holes (a sparse file)**: the kernel requires the swapfile to have no **unallocated holes** (preallocated `unwritten` extents don't count). Check:
 
 ```bash
-sudo filefrag -v /swap.img | head -20   # is the extent layout contiguous?
+sudo filefrag -v /swap.img | head -20   # extent layout; look for real holes, not unwritten
 cat /proc/swaps                          # is swap enabled, and the size what you expect?
 ```
 

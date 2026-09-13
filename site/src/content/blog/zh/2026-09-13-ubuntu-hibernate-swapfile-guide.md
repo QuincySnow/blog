@@ -272,14 +272,22 @@ Ubuntu 现在的默认是 **swapfile**（`/swap.img`）。但 swapfile 有个陷
 sudo filefrag -v /swap.img
 ```
 
-输出里 `physical_offset` 列**第一行的数字，直接就是 `resume_offset`**，不需要乘任何块大小。
+输出里 `physical_offset` 列**第一行的数字，直接就是 `resume_offset`**，不需要乘任何块大小。我这台机器的实际输出：
 
-这点最容易搞错，原因有两个：
+```text
+$ sudo filefrag -v /swap.img
+Filesystem type is: ef53
+File size of /swap.img is 34359738368 (8388608 blocks of 4096 bytes)
+ ext:     logical_offset:        physical_offset: length:   expected: flags:
+   0:        0..       0:   42401792..  42401792:      1:
+   1:        1..   65535:   42401793..  42467327:  65535:             unwritten
+   2:    65536..  557055:   42500096..  42991615: 491520:   42467328: unwritten
+   ...
+  22:  8192000.. 8388607:   62947328..  63143935: 196608:   62914560: last,unwritten,eof
+/swap.img: 22 extents found
+```
 
-- 内核文档说的是 `resume_offset` 以 **`PAGE_SIZE` 为单位**（即块号，不是字节），而 `filefrag` 的 `physical_offset` 列打印出来时已经除过块大小（e2fsprogs 源码里是 `fe_physical >> blk_shift`），所以两者单位一致，**直接用**。
-- 如果把它当成字节、或又乘一次 4096，得到的就是错误的值（差 4096 倍），**开机时会恢复失败**。
-
-我这台机器上这个值是：
+所以取第 0 行的 `physical_offset` 起始值：
 
 ```text
 resume_offset=42401792
@@ -287,7 +295,22 @@ resume_offset=42401792
 
 换算一下就是文件在根分区上大约 161.75 GiB 处（`42401792 × 4096`），对 604.5 GiB 的 `/dev/nvme1n1p4` 来说是合理位置。
 
-> 注：内核文档描述的做法是“用能用 FIBMAP 的工具定位 swap 头的偏移”，并且要求 swapfile 本身**不能有空洞**（不能是稀疏文件）。`filefrag` 输出的块号就是这里要的值；如果 `filefrag` 报 `FIBMAP requires root privileges`，记得前面加 `sudo`。
+这点最容易搞错，原因有两个：
+
+- 内核文档说的是 `resume_offset` 以 **`PAGE_SIZE` 为单位**（即块号，不是字节），而 `filefrag` 的 `physical_offset` 列打印出来时已经除过块大小（e2fsprogs 源码里是 `fe_physical >> blk_shift`），所以两者单位一致，**直接用**。
+- 如果把它当成字节、或又乘一次 4096，得到的就是错误的值（差 4096 倍），**开机时会恢复失败**。
+
+> 为什么 `sudo` 不能省：`filefrag` 默认走 FIEMAP，但需要读取底层的物理映射，非 root 会报 `FIBMAP requires root privileges`。
+
+关于「空洞」：这里要分清两件事。上面输出里除第 0 行外都带 `unwritten` 标记，而且 `physical_offset` 并不连续（`42467327` 后面直接跳到 `42500096`）——这是 `fallocate` 预分配出来的正常形态，**不是空洞**，内核接受（我这台机器上 `cat /proc/swaps` 显示 swap 已正常启用，就是明证）。
+
+`swapon` 真正拒绝的是**未分配的空洞**（`man swapon`：“Files with holes”，例如用 `cp`、`truncate` 创建出来的稀疏文件）。建议用 `fallocate` 创建 swapfile，而不是 `dd` 或 `truncate`：
+
+```bash
+sudo fallocate -l 32G /swap.img    # 预分配，不会产生空洞
+sudo chmod 600 /swap.img
+sudo mkswap /swap.img
+```
 
 确认根文件系统的 UUID：
 
@@ -553,10 +576,10 @@ journalctl -b | grep -iE '(hibernate|suspend)' | tail -30
 
 > `resume_offset` 过时是个容易忽略的坑：swapfile 一旦被重新创建或碎片整理，物理偏移就变了，必须重新用 `filefrag -v` 算一遍。
 
-另一个坑是**空洞（稀疏文件）**：内核要求 swapfile 不能有空洞。检查一下：
+另一个容易混的点是**空洞（稀疏文件）**：内核要求 swapfile 不能有**未分配的空洞**（`unwritten` 标记的预分配 extent 不算）。检查一下：
 
 ```bash
-sudo filefrag -v /swap.img | head -20   # 看 extent 是否连续
+sudo filefrag -v /swap.img | head -20   # extent 布局；看有没有真的空洞而非 unwritten
 cat /proc/swaps                          # 确认 swap 已启用且大小符合预期
 ```
 
