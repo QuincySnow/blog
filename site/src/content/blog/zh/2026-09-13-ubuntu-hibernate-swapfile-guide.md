@@ -247,7 +247,7 @@ sudo update-grub
 
 ## 六、dracut 侧配置（Ubuntu 26.04 的 initramfs）
 
-Ubuntu 26.04 上 initramfs 由 **dracut** 生成（而不是老的 initramfs-tools）。dracut 默认不一定会把 resume 相关的内容打进 initramfs，所以需要显式声明两件事：
+Ubuntu 26.04 上 initramfs 实际由 **dracut** 生成（`initramfs-tools` 并未安装，`dracut` 包会提供一个兼容的 `update-initramfs` 转调脚本）。dracut 默认不一定会把 resume 相关的内容打进 initramfs，所以需要显式声明两件事：
 
 ```bash
 sudo tee /etc/dracut.conf.d/20-hibernate.conf <<'EOF'
@@ -316,21 +316,26 @@ systemctl hibernate
 
 > 如果你走的是 `ubuntu-gnome-hibernate` 那条路，这一步它已经替你做了（包含 polkit 规则和 GNOME 50 扩展），可以跳过。
 
-如果和我一样是手动配置，就自己装一个扩展把按钮加回来。GNOME 50 上可用的是：
+如果和我一样是手动配置，就自己装一个扩展把按钮加回来。GNOME 50 上可用的是 **Hibernate Power Menu**（作者 arnakazim，支持 GNOME 48/49/50），我就是用的这个：
 
 ```bash
-# 通过 extensions.gnome.org 安装
+# 从 extensions.gnome.org 安装
 # hibernate-power-menu@arnakazim
 ```
 
 也可以用命令行确认它已启用：
 
 ```bash
-gnome-extensions list | grep hibernate
+# 手动方案用这个（作者 arnakazim）
 gnome-extensions enable hibernate-power-menu@arnakazim
+
+# 项目自带的是另一个：hibernate-status-gnome50/ 装出来 UUID 是 hibernate-status@dromi
+gnome-extensions enable hibernate-status@dromi
 ```
 
-装好之后，电源菜单里就会出现「休眠」项，点它等同于 `systemctl hibernate`。
+装上之后，电源菜单里就会出现「休眠」项，点它等同于 `systemctl hibernate`。
+
+> 两个扩展不一样，别混：`hibernate-power-menu@arnakazim` 是社区扩展（额外提供 Hybrid Sleep 选项），`hibernate-status@dromi` 是 `ubuntu-gnome-hibernate` 项目对老牌 Hibernate Status Button 的 GNOME 50 fork。两个都能用，选一个就行。
 
 ## 九、省事的方案：`ubuntu-gnome-hibernate`（推荐优先考虑）
 
@@ -366,12 +371,18 @@ sudo ./complete-hibernate-setup-ubuntu-2604-gnome.sh
 sudo systemctl hibernate
 ```
 
+主脚本实际做的事（我读过它的源码）：检查 swap 分区与 UUID 匹配、确认 swap 容量 ≥ 内存、关闭 `/swap.img` 并从 fstab 删除（备份 `/etc/fstab.backup.swapfile`）、启用 swap 分区、备份 GRUB 后写入 `resume=UUID=`（并清掉旧的 `resume`/`resume_offset`）、写 `/etc/initramfs-tools/conf.d/resume`、重建 initramfs、建 `systemd-suspend.service → systemd-hibernate.service` 软链接、写 `sleep.conf`（`AllowSuspend=no`）、装两条 polkit 规则、重启 logind/polkit。全程有颜色提示和确认停顿，且 `SWAP_UUID` 不匹配会直接 `die`——这是一个防呆保护，能防你误在自己机器上跑作者的参数。
+
+诊断脚本比你想象的简单：就只输出 RAM、`swapon --show`、`lsblk`、`blkid | grep swap`、当前 GRUB 参数、`mokutil --sb-state`、内核版本这七项，没有别的。
+
 可选的合盖休眠与 GNOME 按钮：
 
 ```bash
-sudo ./configure-lid-hibernate.sh          # 合盖休眠（会重启 logind，当前会话会退出）
-cd hibernate-status-gnome50 && ./install.sh  # 电源菜单加 Hibernate 按钮
+sudo ./configure-lid-hibernate.sh             # 合盖休眠（会重启 logind，当前会话会退出）
+cd hibernate-status-gnome50 && ./install.sh  # 电源菜单加 Hibernate 按钮（UUID: hibernate-status@dromi）
 ```
+
+合盖脚本比我预想的细致：它同时配三处——当前用户会话的 `gsettings`（AC 与电池分别设）、GDM 登录界面的 gsettings（失败会 `warn` 而非报错），以及 `/etc/systemd/logind.conf.d/hibernate-lid.conf` 作为兜底（`HandleLidSwitch=hibernate`、`HandleLidSwitchDocked=ignore`）。这样即使 GNOME 自己没处理合盖事件，logind 也能接住。
 
 它甚至提供了完整的卸载步骤（回滚 GRUB 备份、删 polkit 规则、恢复 swapfile），这点比很多一次性脚本负责得多。
 
@@ -411,10 +422,14 @@ cd hibernate-status-gnome50 && ./install.sh  # 电源菜单加 Hibernate 按钮
 | 需不需要重分区 | 需要（swap 分区） | 不需要 |
 | 需不需要自己算 offset | ❌ | ✅ |
 | 需不需要 Secure Boot 关闭 | 是 | 是 |
+| initramfs 重建方式 | 脚本调 `update-initramfs -u` | 直接 `dracut --force` |
+| 残留的旧 resume 参数 | 脚本会主动清掉 | 需自己确认 GRUB 里没有 |
+
+> 注：Ubuntu 26.04 上 `dracut` 包自带的 `update-initramfs` 是个转调到 dracut 的兼容脚本（`initramfs-tools` 并未安装），所以两种写法最终都由 dracut 生成 initramfs，区别只在写哪个 `resume` 配置文件。
 | Ubuntu + GNOME | ✅ | ✅ |
 | GNOME 50 | ✅ | ✅ |
 | GRUB `resume` | ✅ | ✅ |
-| initramfs | initramfs-tools | dracut |
+| initramfs | initramfs-tools 路径（实际由 dracut 生成） | dracut |
 | swap partition | 要求 | 不需要 |
 | swapfile | ❌ | ✅ |
 | `resume_offset` | ❌ | ✅ |
@@ -442,7 +457,7 @@ Ubuntu 26.04.1 LTS + GNOME Shell 50.1 + kernel 7.0.0-31
     ├── GRUB  kernel cmdline
     ├── dracut  initramfs（resume 模块 + /etc/cmdline.d/20-resume.conf）
     ├── systemd-hibernate-resume（259:4 / 42401792 验证一致）
-    ├── GNOME 50：hibernate-power-menu 扩展
+    ├── GNOME 50：hibernate-power-menu@arnakazim 扩展
     └── 实测：systemctl hibernate → 断电 → 开机完整恢复
 ```
 
@@ -454,6 +469,6 @@ Ubuntu 26.04.1 LTS + GNOME Shell 50.1 + kernel 7.0.0-31
 4. 只能用 swapfile 时，关键是 **`resume_offset`**，它必须是文件的**物理偏移**，用 `filefrag -v` 算。
 5. Ubuntu 26.04 用 **dracut**，需要显式加入 `resume` 模块并写 `/etc/cmdline.d/20-resume.conf`。
 6. 校验用 `/sys/power/resume` 与 `/sys/power/resume_offset`，必须和内核参数一致。
-7. GNOME 50 默认没有 Hibernate 按钮，用 `hibernate-power-menu@arnakazim` 扩展补上。
+7. GNOME 50 默认没有 Hibernate 按钮，用 `hibernate-power-menu@arnakazim`（社区）或项目自带的 `hibernate-status@dromi` 补上。
 8. `ubuntu-gnome-hibernate` 只支持 swap partition；**swapfile 用户不要跑它的主脚本**，只借它的扩展与辅助脚本。
 9. 不要轻易把 Suspend 全局重定向到 Hibernate。
