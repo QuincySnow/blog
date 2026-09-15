@@ -165,7 +165,7 @@ const {} = Astro.props;
 			var trigger = document.getElementById('search-trigger');
 			if (trigger) trigger.setAttribute('aria-expanded', 'true');
 			document.body.style.overflow = 'hidden';
-			input.focus();
+			requestAnimationFrame(function() { input.focus(); });
 			runSearchOverlay();
 		}
 		function closeSearchOverlay() {
