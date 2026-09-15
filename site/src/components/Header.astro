@@ -165,7 +165,7 @@ const {} = Astro.props;
 			var trigger = document.getElementById('search-trigger');
 			if (trigger) trigger.setAttribute('aria-expanded', 'true');
 			document.body.style.overflow = 'hidden';
-			requestAnimationFrame(function() { input.focus(); });
+			input.focus();
 			runSearchOverlay();
 		}
 		function closeSearchOverlay() {
@@ -415,11 +415,12 @@ const {} = Astro.props;
 		justify-content: center;
 		visibility: hidden;
 		opacity: 0;
-		transition: visibility 0.25s ease, opacity 0.25s ease;
+		transition: opacity 0.25s ease, visibility 0s linear 0.25s;
 	}
 	.search-overlay.open {
 		visibility: visible;
 		opacity: 1;
+		transition: opacity 0.25s ease, visibility 0s;
 	}
 	.search-overlay-backdrop {
 		position: absolute;
