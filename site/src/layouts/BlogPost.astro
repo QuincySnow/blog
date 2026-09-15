@@ -12,12 +12,13 @@ type Props = CollectionEntry<'blog'>['data'] & {
 	dataI18nTitle?: string;
 };
 
-const { title, description, pubDate, updatedDate, heroImage, tags, dataI18nTitle } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, tags, dataI18nTitle, lang: postLang } = Astro.props;
+const htmlLang = postLang === 'zh' ? 'zh-cn' : (postLang === 'en' ? 'en' : 'zh-cn');
 import { withBase } from '../consts';
 
 ---
 
-<html lang="en">
+<html lang={htmlLang}>
 	<head>
 		<BaseHead title={title} description={description} />
 		<style is:global>
