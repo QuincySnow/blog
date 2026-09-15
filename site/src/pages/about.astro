@@ -34,8 +34,8 @@ const projects = [
 	description={metaZh.description}
 	pubDate={new Date()}
 	dataI18nTitle="about.title"
+	pagefindIgnore={true}
 >
-	<div data-pagefind-ignore>
 	<section class="about-portfolio" aria-labelledby="portfolio-title">
 		<h2 id="portfolio-title">
 			<span class="post-lang-zh" data-i18n="about.portfolioTitle">{metaZh.portfolioTitle}</span>
@@ -84,7 +84,6 @@ const projects = [
 			))}
 		</ol>
 	</section>
-	</div>
 </Layout>
 <style>
 	.post-lang-en { display: none; }

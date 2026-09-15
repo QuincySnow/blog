@@ -10,15 +10,16 @@ import { i18n } from '../i18n';
 
 type Props = CollectionEntry<'blog'>['data'] & {
 	dataI18nTitle?: string;
+	pagefindIgnore?: boolean;
 };
 
-const { title, description, pubDate, updatedDate, heroImage, tags, dataI18nTitle, lang: postLang } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, tags, dataI18nTitle, lang: postLang, pagefindIgnore } = Astro.props;
 const htmlLang = postLang === 'zh' ? 'zh-cn' : (postLang === 'en' ? 'en' : 'zh-cn');
 import { withBase } from '../consts';
 
 ---
 
-<html lang={htmlLang}>
+<html lang={htmlLang} data-pagefind-ignore={pagefindIgnore ? 'all' : undefined}>
 	<head>
 		<BaseHead title={title} description={description} />
 		<style is:global>
