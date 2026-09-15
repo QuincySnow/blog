@@ -469,7 +469,7 @@ import { withBase } from '../consts';
 								</div>
 								<h1 data-i18n={dataI18nTitle}>{title}</h1>
 								{tags && tags.length > 0 && (
-									<div class="tags">
+									<div class="tags" data-pagefind-ignore>
 										{tags.map((t) => (
 											<a href={withBase('/tags/' + encodeURIComponent(t))} class="tag tag-link">{t}</a>
 										))}
