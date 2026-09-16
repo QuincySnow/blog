@@ -144,7 +144,7 @@ gdu /home/asus
 
 ## 9. dua-cli（磁盘空间分析）
 
-Rust 编写（[byron/dua-cli](https://github.com/byron/dua-cli)），`du` 的现代替代。既有交互式 TUI（`dua i`），也有适合管道/脚本的并行统计模式（`dua -A` 打印总大小）。处理超多小文件比 ncdu 更快，**实测扫描速度也比 gdu 更快**，且支持硬链接去重统计。
+Rust 编写（[byron/dua-cli](https://github.com/byron/dua-cli)），`du` 的现代替代。既有交互式 TUI（`dua i`），也有适合管道/脚本的并行统计模式（`dua -A` 打印总大小）。处理超多小文件比 ncdu 更快，**实测扫描速度也比 gdu 快得多**（同一目录：`dua i` 0.79s，`gdu` 3s），且支持硬链接去重统计。
 
 ```bash
 cargo install dua-cli
