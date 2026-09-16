@@ -2,7 +2,7 @@
 title: 2026 年必装的现代 CLI 工具：从 ncdu 到 gdu，从 ls 到 eza
 description: 推荐一批 2026 年现代 CLI 工具，覆盖磁盘分析、文件浏览、搜索、系统监控等场景。这些工具都轻量、快速、美观，让终端从「可用」变成「享受」。
 pubDatetime: 2026-04-18T00:00:00Z
-modDatetime: 2026-04-18T00:00:00Z
+modDatetime: 2026-09-16T00:00:00Z
 draft: false
 tags:
   - CLI
@@ -19,7 +19,7 @@ lang: zh
 
 如果你还在用 `ncdu`、`ls`、`cat`、`find`、`grep`、`top`，是时候升级了。2026 年的 CLI 工具生态空前繁荣，大量 Rust/Go 编写的现代工具横空出世——更快、更漂亮、更易用。
 
-**最推荐安装的 8 个核心工具**：**fzf**、**ripgrep**、**zoxide**、**eza**、**bat**、**fd-find**、**btop**、**gdu**。这八个工具覆盖日常开发的高频场景，装好后效率立竿见影。
+**最推荐安装的 9 个核心工具**：**fzf**、**ripgrep**、**zoxide**、**eza**、**bat**、**fd-find**、**btop**、**gdu**、**dua-cli**。这几个工具覆盖日常开发的高频场景，装好后效率立竿见影。
 
 ## 1. fzf（模糊查找，必装！）
 
@@ -142,6 +142,21 @@ gdu /home/asus
 
 **界面操作**：↑↓ 移动，Enter 进入目录，← 返回上级，d 删除，q 退出。
 
+## 9. dua-cli（磁盘空间分析）
+
+Rust 编写（[byron/dua-cli](https://github.com/byron/dua-cli)），`du` 的现代替代。既有交互式 TUI（`dua i`），也有适合管道/脚本的并行统计模式（`dua -A` 打印总大小）。处理超多小文件比 ncdu 更快，**实测扫描速度也比 gdu 更快**，且支持硬链接去重统计。
+
+```bash
+cargo install dua-cli
+
+dua i                        # 交互式分析当前目录
+dua i /home/asus             # 分析指定目录
+dua -A                       # 并行统计，单独打印总大小
+dua aggregate -t 8           # 指定线程数
+```
+
+**界面操作**：↑↓ 移动，→/Enter 进入目录，← 返回上级，d 删除，q 退出。
+
 ## fzf + fd + rg + bat 组合的无敌用法
 
 这四个工具组合在一起堪称无敌：fuzzy 模糊查找 + 快速搜索 + 美观预览。
@@ -156,6 +171,7 @@ fzf --preview 'bat --style=numbers --color=always {}'
 ```bash
 sudo apt update
 sudo apt install -y gdu eza bat fd-find ripgrep fzf zoxide btop
+cargo install dua-cli
 ```
 
 然后在 `~/.zshrc` 添加常用配置：
@@ -173,4 +189,4 @@ alias ll='eza -l --icons --git'
 alias cat='bat'
 ```
 
-这 8 个工具装好后，你的终端会明显更现代、更高效！
+这 9 个工具装好后，你的终端会明显更现代、更高效！

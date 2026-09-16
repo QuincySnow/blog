@@ -2,7 +2,7 @@
 title: "Modern CLI Tools You Need in 2026: From ncdu to gdu, from ls to eza"
 description: "A curated list of modern CLI tools for 2026 covering disk analysis, file browsing, search, and system monitoring"
 pubDatetime: 2026-04-18T00:00:00Z
-modDatetime: 2026-04-18T00:00:00Z
+modDatetime: 2026-09-16T00:00:00Z
 draft: false
 tags:
   - CLI
@@ -19,7 +19,7 @@ lang: en
 
 If you're still using `ncdu`, `ls`, `cat`, `find`, `grep`, `top`, it's time to upgrade. The CLI tool ecosystem in 2026 is booming—numerous Rust/Go-powered modern tools are faster, prettier, and more user-friendly.
 
-**Most recommended 8 core tools**: **fzf**, **ripgrep**, **zoxide**, **eza**, **bat**, **fd-find**, **btop**, **gdu**. These eight tools cover high-frequency daily development scenarios—install them and you'll see immediate efficiency gains.
+**Most recommended 9 core tools**: **fzf**, **ripgrep**, **zoxide**, **eza**, **bat**, **fd-find**, **btop**, **gdu**, **dua-cli**. These tools cover high-frequency daily development scenarios—install them and you'll see immediate efficiency gains.
 
 ## 1. fzf (Fuzzy Finder, Must-Have!)
 
@@ -142,6 +142,21 @@ gdu /home/asus
 
 **Controls**: ↑↓ to move, Enter to enter directory, ← to go back, d to delete, q to quit.
 
+## 9. dua-cli (Disk Space Analysis)
+
+Written in Rust ([byron/dua-cli](https://github.com/byron/dua-cli)), a modern `du` replacement. It has both an interactive TUI (`dua i`) and a parallel aggregate mode suited to pipelines/scripts (`dua -A` prints the total). Faster than ncdu on folders with many small files, and **measurably faster than gdu in my own tests**; it also deduplicates hard links.
+
+```bash
+cargo install dua-cli
+
+dua i                        # Interactive analysis of current dir
+dua i /home/asus             # Analyze a specific directory
+dua -A                       # Parallel aggregate, print total only
+dua aggregate -t 8           # Set thread count
+```
+
+**Controls**: ↑↓ to move, →/Enter to enter directory, ← to go back, d to delete, q to quit.
+
 ## The Ultimate Combo: fzf + fd + rg + bat
 
 These four tools together are unstoppable: fuzzy finding + fast search + beautiful preview.
@@ -156,6 +171,7 @@ fzf --preview 'bat --style=numbers --color=always {}'
 ```bash
 sudo apt update
 sudo apt install -y gdu eza bat fd-find ripgrep fzf zoxide btop
+cargo install dua-cli
 ```
 
 Then add to your `~/.zshrc`:
@@ -173,4 +189,4 @@ alias ll='eza -l --icons --git'
 alias cat='bat'
 ```
 
-After installing these 8 tools, your terminal will be noticeably more modern and efficient!
+After installing these 9 tools, your terminal will be noticeably more modern and efficient!
