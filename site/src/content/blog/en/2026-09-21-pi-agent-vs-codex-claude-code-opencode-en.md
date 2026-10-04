@@ -104,6 +104,16 @@ Bundle them as a **Pi package** and distribute via npm or git; add the `pi-packa
 
 That's not laziness — it's handing the choice back to you. Shipping features nobody uses is what most products do; Pi makes you pull them in deliberately.
 
+And the end state of this is worth being explicit about: **you end up with your own workflow rather than adjusting to whatever a tool decided to ship.** The official tagline puts it best — *Adapt Pi to your workflows, not the other way around.*
+
+Concretely, the difference shows up in a few places:
+
+- **You decide how many tools exist.** Four by default (read / write / edit / bash); add one capability by installing one package, instead of accepting a pile of tool descriptions you never use — which, remember, get re-sent into context on every turn.
+- **Behavior can be rewritten.** Extensions hook the agent lifecycle, so in principle you can transform context before a request, intercept tool calls, and inject your own logic — not just "add a command."
+- **The workflow is packageable and shareable.** A tuned set of skills + prompts + extensions becomes a Pi package others can `pi install`. That also explains why packages like `context-mode`, `ponytail`, and `pi-subagent` exist at all.
+
+By contrast, the extension points of OpenCode / Codex / Claude Code are mostly "add things to a fixed shape" — commands, agents, hooks, plugins. Pi's extension points get closer to "change how the agent runs." That's the often-cited finding, which does hold up: *the harness that ships four tools beat the harness that ships everything.*
+
 Pi also has MCP built in:
 
 ```bash
@@ -152,6 +162,99 @@ So `/trust` only controls *which project resources get loaded* — it is not a s
 
 If you plan to run Pi in CI, on a shared server, or against untrusted code, **you have to supply the isolation yourself** (container, Docker sandbox, separate user). Codex's built-in sandboxing works out of the box. For my comparison, that's the most substantive gap.
 
+## Measured data: what a harness is worth once the model is fixed
+
+All of the above is design comparison, and design doesn't tell you how things perform. More convincing is a controlled experiment that **holds the model fixed and swaps only the harness**.
+
+First, what this class of experiment actually answers:
+
+> "I already have a strong model — which harness should drive it?"
+
+Not "which model is strongest."
+
+### Experiment 1: Tensorlake, four-way
+
+[Tensorlake's 14-day test](https://www.tensorlake.ai/blog/best-ai-coding-agents-2026) ran 30 hard agentic tool-use tasks on DeepSeek V4 Flash across all four harnesses:
+
+| Harness | Passed | Median time | Avg tokens/task | Total cost | Cost/success |
+| --- | --- | --- | --- | --- | --- |
+| **Pi** | **20/30 (66.7%)** | 132.2s | 558,885 | **$0.56** | **$0.028** |
+| Claude Code | 16/30 (53.3%) | **122.7s** | 741,659 | $3.12 | $0.195 |
+| Codex | 16/30 (53.3%) | 245.0s | 664,772 | $1.29 | $0.081 |
+| OpenCode | 14/30 (46.7%) | 129.7s | 692,195 | $1.03 | $0.073 |
+
+The author's conclusion is blunt: Pi won, and not narrowly on cost — the harness that ships four tools beat the harness that ships everything.
+
+In the same run, Claude Code was fastest but the most token-hungry; Codex matched Claude Code's pass rate at under half the cost, but took a 245s median — roughly double everyone else. Tensorlake's TL;DR calls Pi "best if you pay per token" while flagging **almost no guardrails**.
+
+### Experiment 2: Composio, eight-way
+
+[Composio's test](https://composio.dev/content/best-agent-harness-deepseek-v4-flash) covers more ground (eight harnesses), again DeepSeek V4 Flash on the same 30 tasks:
+
+| Harness | Passed | Median time | Cost per success |
+| --- | --- | --- | --- |
+| **Pi** | **20/30 (66.7%)** | 132.2s | **$0.028** ⚠️ |
+| Prime Agent | 15/24 valid (62.5%) | ~4 min | $0.131 |
+| OMP (Oh My Pi) | 17/30 (56.7%) | 272.4s | $0.103 |
+| Claude Code | 16/30 (53.3%) | **122.7s** | $0.195 |
+| Codex | 16/30 (53.3%) | ~4 min | $0.081 |
+| DeepAgents | 16/30 (53.3%) | 187.1s | $0.045 |
+| Hermes | 15/30 (50%) | 175.5s | $0.056+ |
+| OpenCode | 14/30 (46.7%) | 129.7s | $0.073 |
+
+⚠️ **The official caveat has to come with this**:
+
+> Pi had the lowest reported cost. It cost $0.028 for each successful task. **However, Pi used a different reasoning setting, and it used two model providers. This limits a direct comparison.**
+
+So Pi's **cost** number is not strictly comparable — different reasoning settings and two providers. The pass-rate column doesn't have that problem.
+
+The most instructive part of this test isn't who won, it's **why Claude Code was most expensive**. Its total token use was similar to Codex and OMP, but only **1.5% of its tokens came from cache**, versus roughly 70% for Codex and 57% for OMP — and fresh input costs five times cached input. The original conclusion: *token count alone does not explain cost.* What matters is the mix of fresh input, cached input, and output.
+
+Note that time and tokens don't track each other: Claude Code and OMP both used about 742,000 tokens per task, yet Claude Code finished in under half the time; Hermes used only about 192,000 tokens and was still slower than Claude Code.
+
+### Experiment 3: Pi head-to-head
+
+[Composio's second round](https://composio.dev/content/pi-vs-opencode) switched to DeepSeek V4 Pro (0813) at max reasoning, same 30 hard tasks:
+
+| Harness | Passed | Cost/success | Cost per shared success | Avg tokens | Avg turns |
+| --- | --- | --- | --- | --- | --- |
+| **Pi Agent** | **21/30 (70%)** | $0.078 | $0.031 | 924,990 | 16.3 |
+| Codex | 20/30 (66.7%) | n/a\* | $0.031 | 383,722 | n/a |
+| DeepSeek Harness | 20/30 (66.7%) | $0.076 | $0.028 | 88,562 | 0.9 |
+| OpenCode | 19/30 (63.3%) | $0.119 | $0.032 | 710,140 | 13.1 |
+| Claude Code | 19/30 (63.3%) | n/a\* | $0.074 | 649,900 | 12.1 |
+| Hermes | 18/30 (60%) | n/a\* | $0.037 | 113,894 | 6.5 |
+
+\* Cost measurement incomplete; not comparable.
+
+Here **Pi is not the most token-frugal** — 925k tokens per task against Codex's 384k. But the two more meaningful metrics are: **Pi had the highest pass rate (70%)**, and **on tasks both harnesses passed, Pi and Codex cost exactly the same** ($0.031). The original explanation is a good one: OpenCode looks expensive not because it costs more when it succeeds, but because **it fails more tasks, and failed runs burn tokens too.**
+
+Pi spent $1.64 for the full run; OpenCode $2.25.
+
+### Cold-start overhead: a number to read carefully
+
+The most-cited evidence for "Pi is lighter" actually comes from [Systima's measurement](https://systima.ai/blog/claude-code-vs-opencode-token-overhead), and it compares **Claude Code vs OpenCode — Pi is not in it**:
+
+The conditions are unusually controlled — same machine, pinned `claude-sonnet-4-5`, fresh config directories (no MCP, no user settings, no memory), empty workspace (no instruction files), permissions bypassed. The task is to reply `Reply with exactly: OK` (22 characters), three runs per harness.
+
+| | Claude Code | OpenCode |
+| --- | --- | --- |
+| System prompt | 27,344 chars, 3 blocks | 9,324 chars, 1 block |
+| Tool schemas | **27 tools**, 99,778 chars | 10 tools, 20,856 chars |
+| First-message `<system-reminder>` blocks | 7,997 chars | none |
+| The actual prompt | 22 chars | 22 chars |
+| **First-turn payload (calibrated)** | **~32,800 tokens** | **~6,900 tokens** |
+
+Tool schemas are the dominant term: roughly 24,000 of Claude Code's ~33,000 tokens are tool definitions, versus roughly 4,800 of OpenCode's ~6,900.
+
+Pi's own numbers come from the project's own description: **four tools by default (read / write / edit / bash), system prompt under 1,000 tokens**, everything else opt-in via packages.
+
+But Systima's author adds an important qualifier, worth quoting:
+
+> raw input token count is not a meaningful benchmark... What really matters is the mix of tools the harness exposes, the steering it embeds into tool descriptions, and how effectively it takes advantage of model and provider features such as prompt caching.
+
+So the defensible claim is narrower: **Pi really is much cheaper on a single interaction** (fewer tools, shorter prompt). Lower fixed context overhead is not by itself "better outcomes" — Claude Code's 27 tools include background agents, orchestration, and worktree management. The extra spend buys something.
+
 ## How to choose
 
 ```text
@@ -166,7 +269,11 @@ My own split for daily work: Pi as the primary, extensions for anything browser-
 
 ## The one-line summary
 
-Pi isn't the most feature-complete agent, but it may be the easiest one to turn into exactly what you want: any model, forkable sessions, scriptable tool calls, embeddable in a program, and extensibility you can package and share. The trade is that it delegates a lot of "should have been built in" to community packages, and it leaves sandboxing to you.
+Pi isn't the most feature-complete agent, but it may be the easiest one to turn into exactly what you want: any model, forkable sessions, scriptable tool calls, embeddable in a program, and extensibility you can package and share. Its stance is *adapt Pi to your workflows, not the other way around* — you end up with your own workflow instead of adjusting to the tool.
+
+The measured data so far points the same way: in head-to-head tests that hold the model fixed and vary only the harness, Pi posts the highest pass rate (20/30 to 21/30) and the lowest cost per successful task ($0.028), and under tight controls its cold-start context overhead is far below Claude Code's.
+
+The trade-offs are just as clear: it delegates a lot of "should have been built in" to community packages, and it leaves sandboxing entirely to you.
 
 If you care more about working out of the box and ecosystem depth, Codex and Claude Code are the safer bet. If you care about open-source freedom, OpenCode is excellent. And if you keep finding yourself bending a tool around your workflow instead of the other way around — that's the signal to try Pi.
 
@@ -177,5 +284,9 @@ If you care more about working out of the box and ecosystem depth, Codex and Cla
 - [anomalyco/opencode](https://github.com/anomalyco/opencode)
 - [openai/codex](https://github.com/openai/codex) · [Codex security docs](https://developers.openai.com/codex/security)
 - [anthropics/claude-code](https://github.com/anthropics/claude-code)
+- [Tensorlake: Best AI Coding Agents in 2026](https://www.tensorlake.ai/blog/best-ai-coding-agents-2026)
+- [Composio: Finding the Best Harness for DeepSeek V4 Flash](https://composio.dev/content/best-agent-harness-deepseek-v4-flash)
+- [Composio: Pi vs OpenCode](https://composio.dev/content/pi-vs-opencode)
+- [Systima: Claude Code vs OpenCode token overhead](https://systima.ai/blog/claude-code-vs-opencode-token-overhead)
 
 For the Chinese version of this article, see [为什么我推荐 Pi Agent：与 OpenCode、Codex、Claude Code 的对比](/blog/posts/zh/2026-09-21-pi-agent-vs-codex-claude-code-opencode).
