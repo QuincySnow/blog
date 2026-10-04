@@ -24,13 +24,49 @@ The one-sentence version: **if you want an agent that runs any model, reshapes i
 
 ### Installing
 
+Pi has two kinds of install, and the difference is **whether dependencies get pinned**.
+
+**The official installer** (pins all transitive dependencies; upgrade with `pi update`):
+
+macOS / Linux:
+
 ```bash
-curl -fsSL https://pi.dev/install.sh | sh          # pins deps; upgrade with pi update
+curl -fsSL https://pi.dev/install.sh | sh
+```
+
+Windows:
+
+```powershell
+irm https://pi.dev/install.ps1 | iex
+```
+
+**Package managers** (do not pin transitive dependencies; requires Node.js 22.19+):
+
+bun:
+
+```bash
+bun add -g --ignore-scripts @earendil-works/pi-coding-agent
+```
+
+npm:
+
+```bash
 npm install -g --ignore-scripts @earendil-works/pi-coding-agent
+```
+
+pnpm:
+
+```bash
+pnpm add -g --ignore-scripts @earendil-works/pi-coding-agent
+```
+
+Nix (offered in the official quickstart, not among the pi.dev homepage tabs):
+
+```bash
 nix profile add github:earendil-works/pi/stable
 ```
 
-Requires **Node.js 22.19+**. Then run `pi` in a project directory and `/login` to connect a subscription or an API key.
+The three package-manager commands differ only in the package manager's name. Then run `pi` in a project directory and `/login` to connect a subscription or an API key. This site uses Bun, so `bun add -g` is the one to reach for in practice.
 
 ## Five design choices that matter
 

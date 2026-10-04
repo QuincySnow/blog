@@ -24,13 +24,49 @@ Pi 由 Earendil（Mario Zechner，badlogicgames）开发，仓库是 [earendil-w
 
 ### 安装
 
+Pi 有两类安装方式，区别在于**是否锁定依赖**。
+
+**官方安装脚本**（锁定全部传递依赖，用 `pi update` 升级）：
+
+macOS / Linux：
+
 ```bash
-curl -fsSL https://pi.dev/install.sh | sh          # 推荐，锁定依赖版本，pi update 升级
+curl -fsSL https://pi.dev/install.sh | sh
+```
+
+Windows：
+
+```powershell
+irm https://pi.dev/install.ps1 | iex
+```
+
+**包管理器**（不锁定传递依赖，需要 Node.js 22.19+）：
+
+bun：
+
+```bash
+bun add -g --ignore-scripts @earendil-works/pi-coding-agent
+```
+
+npm：
+
+```bash
 npm install -g --ignore-scripts @earendil-works/pi-coding-agent
+```
+
+pnpm：
+
+```bash
+pnpm add -g --ignore-scripts @earendil-works/pi-coding-agent
+```
+
+Nix（官方 quickstart 提供，pi.dev 首页 tab 未列出）：
+
+```bash
 nix profile add github:earendil-works/pi/stable
 ```
 
-要求 **Node.js 22.19+**。装完在项目目录里直接 `pi`，然后 `/login` 连订阅或填 API key。
+三条包管理器命令只差包管理器名。装完在项目目录里直接 `pi`，然后 `/login` 连订阅或填 API key。本站用 Bun，所以实际推荐 `bun add -g` 那条。
 
 ## Pi 的五个关键设计
 
