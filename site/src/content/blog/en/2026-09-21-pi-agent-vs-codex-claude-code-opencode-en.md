@@ -72,6 +72,22 @@ Two concrete wins: parallel calls save time, and filtering before returning save
 
 One detail worth knowing: `bash` resolves inside codemode to an object with `full_output_path`. The model sees the 2000-line/50KB view, but your script gets up to 1 MiB — so "just read the tail of a huge log" never requires pushing the whole thing into context.
 
+**But one honest caveat: I verified the mechanism, not the payoff.**
+
+I did measure the fixed-overhead difference between on and off — **1,940 → 2,403 tokens per turn, a net cost of 463 tokens (+23.9%)**. Whether that comes back on multi-tool tasks, I could not measure.
+
+The reason is a bit embarrassing: I built a task that needed six files read and summarised, ran it three times with codemode on and three with it off, and **both groups used a single `bash` call** (`wc -l *.txt` solves it outright). Codemode was never invoked. My first analysis reported "codemode is 6.7x cheaper" — checking the actual tool-call records showed that was model nondeterminism, not codemode.
+
+The root cause: **codemode is a tool the model chooses on its own, and Pi has no switch to force it.** Small models in particular tend to reach for the `bash` shortcut. So there is currently no trustworthy figure for how much codemode actually saves.
+
+Practical guidance:
+
+- **On cost grounds, this is not a switch worth agonizing over.** 463 tokens is about $0.0000014 per turn when cached, and still only $0.000069 per turn if nothing caches.
+- **The real decision is capability, not savings**: turn it on if you need `models.classify()`, `models.generateImages()`, or batch filtering of large tool results.
+- **For ordinary reads and commands, you're most likely just paying those 463 tokens for nothing.**
+
+Worth noting: for day-to-day overhead, what actually matters isn't codemode but which packages you have installed — the measurement further down shows extension packages costing an order of magnitude more than codemode does.
+
 ### 4. Four integration surfaces
 
 ```text
