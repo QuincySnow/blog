@@ -151,15 +151,28 @@ npx -y camoufox-mcp-server@latest
 
 ## 接入 Pi
 
-这里有个容易踩的坑：这套配置用的是 Pi 的 MCP 配置文件 `~/.pi/agent/mcp.json`。
-
-先安装 adapter：
+先说一个容易踩的坑：**现在 Pi 原生支持 MCP，不需要再装 `pi-mcp-adapter`。** Camoufox MCP Server 的 README 里还写着
 
 ```bash
 pi install npm:pi-mcp-adapter
 ```
 
-然后创建或编辑：
+那是 Pi 内置 MCP 支持之前的写法，现在属于多余步骤。
+
+最省事的是用 Pi 自带的命令直接注册（默认写入用户级 `~/.pi/agent/mcp.json`）：
+
+```bash
+pi mcp add camoufox -- npx -y camoufox-mcp-server@latest
+pi mcp list
+```
+
+加 `--local`（或 `-l`）则写到项目级 `.pi/mcp.json`：
+
+```bash
+pi mcp add -l camoufox -- npx -y camoufox-mcp-server@latest
+```
+
+也可以手写配置文件：
 
 ```bash
 nano ~/.pi/agent/mcp.json
@@ -179,7 +192,11 @@ nano ~/.pi/agent/mcp.json
 }
 ```
 
-保存后重新启动 Pi。本文以已验证通过的 Pi 1.0.0 配置为准：直接在 `~/.pi/agent/mcp.json` 注册 MCP Server。
+Pi 的 MCP 配置分两级：用户级 `~/.pi/agent/mcp.json`，项目级 `.pi/mcp.json`（需信任项目后才生效）；同名条目以项目级为准。配置格式与其他 MCP 客户端一致。
+
+启动 `pi` 后，在会话里用 `/mcp` 可以查看已配置的 server 及其状态、工具数量和配置来源。如果是在会话外改的配置，记得执行 `/reload` 重新加载。
+
+工具在 Pi 里的名字是 `mcp__<server>__<tool>`，也就是 `mcp__camoufox__browse` 这种形式。
 
 ## MCP 提供了什么
 
@@ -359,6 +376,12 @@ python -m camoufox fetch
 camoufox version
 ```
 
+注册：
+
+```bash
+pi mcp add camoufox -- npx -y camoufox-mcp-server@latest
+```
+
 MCP 配置（`~/.pi/agent/mcp.json`）：
 
 ```json
@@ -375,7 +398,7 @@ MCP 配置（`~/.pi/agent/mcp.json`）：
 }
 ```
 
-启动 `pi`，然后检查 MCP 工具列表里是否出现 Camoufox。
+启动 `pi`，然后用 `/mcp` 确认 Camoufox 已连接、工具已加载。
 
 ## 总结
 

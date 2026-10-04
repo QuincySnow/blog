@@ -151,15 +151,28 @@ The project's default version pins fix the Camoufox/Playwright dependency set, a
 
 ## Wiring it into Pi
 
-One easy mistake here: this setup uses Pi's MCP config file at `~/.pi/agent/mcp.json`.
-
-Install the adapter first:
+One easy mistake here: **Pi now supports MCP natively, so you no longer install `pi-mcp-adapter`.** The Camoufox MCP Server README still says
 
 ```bash
 pi install npm:pi-mcp-adapter
 ```
 
-Then create or edit:
+which is the pre-built-in-support era. It's now a redundant step.
+
+The quickest path is Pi's own command, which writes to the user-level `~/.pi/agent/mcp.json` by default:
+
+```bash
+pi mcp add camoufox -- npx -y camoufox-mcp-server@latest
+pi mcp list
+```
+
+Add `--local` (`-l`) to write the project-level `.pi/mcp.json` instead:
+
+```bash
+pi mcp add -l camoufox -- npx -y camoufox-mcp-server@latest
+```
+
+You can also edit the config by hand:
 
 ```bash
 nano ~/.pi/agent/mcp.json
@@ -179,7 +192,11 @@ nano ~/.pi/agent/mcp.json
 }
 ```
 
-Restart Pi afterwards. This is verified against Pi 1.0.0, which registers MCP servers directly in `~/.pi/agent/mcp.json`. (The adapter also reads the standard `.mcp.json` / `~/.config/mcp/mcp.json` locations.)
+Pi reads MCP config at two levels: user-level `~/.pi/agent/mcp.json` and project-level `.pi/mcp.json` (the latter only after the project is trusted); a project entry replaces the user-level one with the same name. The format matches other MCP clients.
+
+Inside a session, `/mcp` lists configured servers with their state, tool count, exposure, and configuration source. If you changed config outside the session, run `/reload`.
+
+Tools are named `mcp__<server>__<tool>` inside Pi — so you get `mcp__camoufox__browse` and friends.
 
 ## What MCP actually gives you
 
@@ -359,6 +376,12 @@ python -m camoufox fetch
 camoufox version
 ```
 
+Register:
+
+```bash
+pi mcp add camoufox -- npx -y camoufox-mcp-server@latest
+```
+
 MCP config (`~/.pi/agent/mcp.json`):
 
 ```json
@@ -375,7 +398,7 @@ MCP config (`~/.pi/agent/mcp.json`):
 }
 ```
 
-Start `pi`, then check that the Camoufox tools appear in the tool list.
+Start `pi`, then use `/mcp` to confirm Camoufox is connected and its tools are loaded.
 
 ## Summary
 
