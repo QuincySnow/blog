@@ -290,7 +290,71 @@ The method wasn't removing features — it was rewriting how they're described:
 
 That's the design paying off in cost terms: **fewer tools plus shorter descriptions means a smaller fixed overhead per turn.** Cache warming, cached-prefix preservation, and billing fixes are all about squeezing value out of context you've *already paid for*.
 
-So the fuller conclusion is: **the benchmarks show 0.8x Pi already leading, and the 1.0 series kept pushing in the same direction.** Worth stating plainly though: no three-way benchmark has been re-run since 1.0, so there is **no measured** figure for how much further 1.0 pushes $0.028 down — don't speculate.
+### Reproducing the −40%
+
+The CHANGELOG gives a concrete figure: a GPT-5.6 request shrinking from about 5,300 to 3,300 tokens. I tested that locally — `codemode` on, one fixed `Reply with exactly: OK`, Pi version as the only variable.
+
+| Model | 0.99.2 | 1.0.2 | Change |
+| --- | --- | --- | --- |
+| deepseek-v4-flash | 4,127 | **2,403** | **−41.8%** |
+| gpt-5.6-luna | 3,211 | **1,703** | **−47.0%** |
+| *official changelog (GPT-5.6)* | *5,300* | *3,300* | *−37.7%* |
+
+Five runs per group, medians, measured as total context sent per turn (`input + cacheRead + cacheWrite`). Absolute values differing from the official numbers is expected — different model, different tokenizer — but **the magnitude lands in the same range and slightly exceeds it.** The "about 40%" claim can be treated as independently reproduced, not just a changelog line.
+
+Reproducing it needs no installation of an old version:
+
+```bash
+PI_CODING_AGENT_DIR=/tmp/clean \
+bunx @earendil-works/pi-coding-agent@0.99.2 \
+  --mode json --print --tools read,bash,edit,write,codemode \
+  --model opencode-go/deepseek-v4-flash "Reply with exactly: OK"
+```
+
+`bunx` fetches a pinned version without touching your global install, and `PI_CODING_AGENT_DIR` points at an empty directory holding only credentials — no packages — so installed extensions stay out of the measurement.
+
+### A trap worth recording: `input` is not context size
+
+The first run made `input` look tiny — a few tokens:
+
+| Model | input | cacheRead | cacheWrite |
+| --- | --- | --- | --- |
+| deepseek-v4-flash (0.99.2) | 31 | **4,096** | 0 |
+| gpt-5.6-luna (0.99.2) | 3 | 0 | **3,208** |
+
+The truth is that **the whole context was absorbed by the cache.** The real metric is `input + cacheRead + cacheWrite`.
+
+Money amplifies this distinction hard. On `deepseek-v4-flash` list pricing:
+
+| | USD / 1M tokens |
+| --- | --- |
+| input | 0.15 |
+| output | 0.6 |
+| **cacheRead** | **0.003** |
+
+**Cache reads are 50x cheaper than fresh input.** So "bigger context = more expensive" stops being true once caching is on — what costs is always the part that *missed* the cache.
+
+That is the same mechanism Composio found from the other direction: Claude Code is expensive not because it uses more tokens, but because only 1.5% of them hit cache.
+
+### Where your own overhead actually lives
+
+Measuring the same way also shows the gap between bare Pi and Pi with packages installed (same model, same prompt):
+
+| Configuration | Context per turn |
+| --- | --- |
+| Bare Pi · four default tools · no packages · no codemode | **1,940** |
+| Bare Pi · four default tools + codemode | 2,403 |
+| With 11 Pi packages installed | **25,651** |
+
+Bare Pi's fixed overhead really is around 1,940 tokens, which supports the "the harness itself is light" claim above. But **in day-to-day use, over 90% of that overhead comes from extensions, not from Pi.**
+
+Thanks to caching, though, that last row is also the *cheapest* of the three in real money ($0.000086 per turn versus $0.000299 for bare Pi) — nearly all 25k arrives as cacheRead. That's exactly what cache warming buys you.
+
+### The conclusion
+
+So the fuller statement is: **the benchmarks show 0.8x Pi already leading; 1.0's codemode slimming measurably cuts fixed overhead by more than 40%; and the cache-warming work turns context you've already paid for into something close to free reads.**
+
+As for how much further that pushes the $0.028 in those benchmarks — that needs the full three-way comparison re-run on a fixed task set with repeats. There is no data for it yet, so don't speculate.
 
 ## How to choose
 
