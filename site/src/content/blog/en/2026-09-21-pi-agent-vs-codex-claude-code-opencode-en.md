@@ -255,6 +255,43 @@ But Systima's author adds an important qualifier, worth quoting:
 
 So the defensible claim is narrower: **Pi really is much cheaper on a single interaction** (fewer tools, shorter prompt). Lower fixed context overhead is not by itself "better outcomes" — Claude Code's 27 tools include background agents, orchestration, and worktree management. The extra spend buys something.
 
+## One important timing gap: the benchmarks aren't of 1.0
+
+All four benchmarks above share a detail worth noticing: **they all predate Pi 1.0.**
+
+```text
+Systima (cold-start overhead)     2026-07
+Composio (DeepSeek V4 Flash)      2026-08-06
+Composio (DeepSeek V4 Pro)        2026-08-21
+────────────────────────────────────────
+Pi 0.86.0 adds prompt cache warming  2026-09-19
+Pi 0.99.0                              2026-09-29
+Pi 1.0.0                               2026-10-01   ← after every benchmark
+```
+
+So that $0.028 was measured on a **0.8x-era Pi**. Since then Pi shipped another round of cost-targeted work, item by item in the official CHANGELOG:
+
+| Version | Date | Cost-relevant change |
+| --- | --- | --- |
+| 0.86.0 | 2026-09-19 | **Prompt cache warming** — keeps valuable caches alive during long tool runs and while idle, using cost-aware refreshes |
+| 0.86.0 | 2026-09-19 | **Transcript-aware prompt/tool updates** — instruction and tool changes survive resume and branch navigation while **retaining cached prefixes** |
+| 0.99.0 | 2026-09-29 | Fixed usage from tools called through `ctx.executeTool()` (e.g. codemode scripts) being **dropped from session cost**; it now counts |
+| **1.0.0** | **2026-10-01** | **Leaner codemode: about 40% fewer prompt tokens** |
+| 1.0.1 | 2026-10-03 | Anthropic tools added or redefined mid-conversation are defined inline, so redefining one under the same name **keeps the prompt cache instead of resending the full tool list** |
+| 1.0.1 | 2026-10-03 | Fixed Bedrock OpenAI models being billed at the short-context rate above 272k input tokens; pricing tiers from models.dev now apply |
+
+1.0.0 gives a concrete number: **with default tools and codemode active, a GPT-5.6 request shrinks from about 5,300 tokens to about 3,300** (roughly −38%).
+
+The method wasn't removing features — it was rewriting how they're described:
+
+- In the `codemode` description, each script global takes one line, and the `models` API points to a reference doc the model **reads when it needs it**
+- Declared tools say in one line how scripts call them and what the call resolves to, **instead of repeating the full declaration**
+- The system prompt's codemode guidance and MCP server section were shortened at the same time
+
+That's the design paying off in cost terms: **fewer tools plus shorter descriptions means a smaller fixed overhead per turn.** Cache warming, cached-prefix preservation, and billing fixes are all about squeezing value out of context you've *already paid for*.
+
+So the fuller conclusion is: **the benchmarks show 0.8x Pi already leading, and the 1.0 series kept pushing in the same direction.** Worth stating plainly though: no three-way benchmark has been re-run since 1.0, so there is **no measured** figure for how much further 1.0 pushes $0.028 down — don't speculate.
+
 ## How to choose
 
 ```text
