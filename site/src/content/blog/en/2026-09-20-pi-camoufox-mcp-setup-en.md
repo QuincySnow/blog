@@ -73,17 +73,25 @@ Install it as a `uv tool`, with GeoIP support included:
 uv tool install "camoufox[geoip]"
 ```
 
-This form is wrong:
+`[gui]` is a second official extra (it pulls in PySide6 for the `camoufox gui` Qt manager). If you want both, combine them — commas *inside* the brackets are the PEP 508 way to list extras:
+
+```bash
+uv tool install "camoufox[geoip,gui]"
+```
+
+What actually fails is using a comma to separate **two package requirements**:
 
 ```bash
 uv tool install "camoufox[geoip],camoufox[geoip]"
 ```
 
-`uv` parses the whole string as a single package requirement, so it fails with:
+`uv` parses the whole string as a single requirement, so it errors with:
 
 ```text
 Expected one of `@`, `(`, `<`, `=`, `>`, `~`, `!`, `;`, found `,`
 ```
+
+The only difference is where the comma sits: inside the brackets it lists extras, outside them it lists multiple packages.
 
 The official installation docs currently recommend:
 
@@ -345,6 +353,8 @@ Camoufox:
 
 ```bash
 uv tool install "camoufox[geoip]"
+# add the Qt manager
+uv tool install "camoufox[geoip,gui]"
 python -m camoufox fetch
 camoufox version
 ```

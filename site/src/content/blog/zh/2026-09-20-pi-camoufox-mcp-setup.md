@@ -73,7 +73,13 @@ pi --version
 uv tool install "camoufox[geoip]"
 ```
 
-注意下面这种写法是错的：
+`[gui]` 是另一个官方 extra（装 PySide6，提供 `camoufox gui` 这个 Qt 管理器）。需要的话可以和 geoip 一起写，extras 之间的逗号是 PEP 508 合法分隔符：
+
+```bash
+uv tool install "camoufox[geoip,gui]"
+```
+
+真正会报错的是**用逗号分隔两个 requirement**：
 
 ```bash
 uv tool install "camoufox[geoip],camoufox[geoip]"
@@ -84,6 +90,8 @@ uv tool install "camoufox[geoip],camoufox[geoip]"
 ```text
 Expected one of `@`, `(`, `<`, `=`, `>`, `~`, `!`, `;`, found `,`
 ```
+
+区别只在于逗号出现的位置：在方括号**里面**是列 extra，在方括号**外面**是列多个包。
 
 Camoufox 官方安装文档目前同样推荐：
 
@@ -345,6 +353,8 @@ Camoufox：
 
 ```bash
 uv tool install "camoufox[geoip]"
+# 需要 Qt 管理器时
+uv tool install "camoufox[geoip,gui]"
 python -m camoufox fetch
 camoufox version
 ```
