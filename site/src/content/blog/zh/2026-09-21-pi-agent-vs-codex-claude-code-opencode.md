@@ -1,8 +1,8 @@
 ---
 title: "为什么我推荐 Pi Agent：与 OpenCode、Codex、Claude Code 的对比"
 description: "Pi 是一个极简、可改造的终端 Agent harness：模型无关、会话是树、Codemode、四种集成形态、扩展可打包分发。对比 OpenCode、Codex CLI、Claude Code 的许可证、模型策略、扩展方式与安全模型，给出选型建议"
-pubDatetime: 2026-09-21T00:00:00Z
-modDatetime: 2026-09-21T00:00:00Z
+pubDatetime: 2026-10-01T00:00:00Z
+modDatetime: 2026-10-01T00:00:00Z
 draft: false
 tags:
   - AI
@@ -137,10 +137,10 @@ TypeScript SDK  → 在自己的应用里内嵌 Pi
 
 官方给的选择依据：
 
-| 接口 | 进程边界 | 控制方式 | 适合 |
-|---|---|---|---|
-| SDK | 同进程 | 直接 TS 方法与事件 | Node.js / Bun 宿主，要完整 API |
-| RPC | 子进程 | JSONL 命令/响应/事件 | 其他语言、进程隔离、IDE、自定义客户端 |
+| 接口 | 进程边界 | 控制方式             | 适合                                  |
+| ---- | -------- | -------------------- | ------------------------------------- |
+| SDK  | 同进程   | 直接 TS 方法与事件   | Node.js / Bun 宿主，要完整 API        |
+| RPC  | 子进程   | JSONL 命令/响应/事件 | 其他语言、进程隔离、IDE、自定义客户端 |
 
 想给 Pi 写个 IDE 插件或接进 CI，RPC 这条路是现成的，不用自己造轮子。
 
@@ -159,7 +159,7 @@ Pi 的可定制单元有四种：
 
 这不是偷工减料，而是把选择权交给你：默认塞一堆用不上的功能，是大多数产品的做法；Pi 选择让你按需引入。
 
-而这一步的终点是：**你最终拥有的是一个自己的工作流，而不是「用着某个工具将就一下」**。官方一句话概括得最准——*Adapt Pi to your workflows, not the other way around.*
+而这一步的终点是：**你最终拥有的是一个自己的工作流，而不是「用着某个工具将就一下」**。官方一句话概括得最准——_Adapt Pi to your workflows, not the other way around._
 
 具体差别体现在几个地方：
 
@@ -167,7 +167,7 @@ Pi 的可定制单元有四种：
 - **行为可以改写。** extension 能挂 Agent 生命周期钩子，理论上你能在模型请求前后改写上下文、拦截工具调用、插入自己的逻辑，而不只是「加个命令」。
 - **工作流可以打包分享。** 调好的一套 skills + prompts + extensions 可以作为一个 Pi package 分发，别人 `pi install` 就能用你的工作流。反过来也解释了为什么 `context-mode`、`ponytail`、`pi-subagent` 这类包会存在。
 
-对比之下，OpenCode / Codex / Claude Code 的扩展点大多是「往既定形态里加东西」——命令、agent、hook、plugin；而 Pi 的扩展点更接近「改 Agent 的运行方式」。这就是那个常被引用、也确实成立的说法：*the harness that ships four tools beat the harness that ships everything*。
+对比之下，OpenCode / Codex / Claude Code 的扩展点大多是「往既定形态里加东西」——命令、agent、hook、plugin；而 Pi 的扩展点更接近「改 Agent 的运行方式」。这就是那个常被引用、也确实成立的说法：_the harness that ships four tools beat the harness that ships everything_。
 
 顺带一提，Pi 内置 MCP，原生支持：
 
@@ -182,20 +182,20 @@ pi mcp list
 
 ### 速查表
 
-| 维度 | **Pi** | **OpenCode** | **Codex CLI** | **Claude Code** |
-|---|---|---|---|---|
-| 定位 | 可改造的 Agent harness | 「开源 AI coding agent」 | 轻量终端 coding agent | 终端里的 agentic 工具 |
-| 许可证 | 开源 | **MIT** | **Apache-2.0** | **闭源**（GitHub 仓库无 OSS 许可证） |
-| 实现语言 | TypeScript | TypeScript | Rust | TypeScript |
-| 发行 | npm / 安装脚本 / nix | npm / brew / pacman / mise 等 | npm `@openai/codex` / brew cask / 独立安装脚本 | npm `@anthropic-ai/claude-code` |
-| 模型策略 | **模型无关**：订阅 / API key / 本地 / 兼容端点 | 多 provider（models.dev 目录驱动） | 主打 ChatGPT 订阅（Sign in with ChatGPT），也支持 API key | 绑定 Anthropic（订阅或 API key） |
-| 沙箱 | **无内置沙箱** | — | **有**，独立的沙箱与审批文档 | — |
-| 扩展方式 | extensions / skills / prompts / themes，打包分发 | 插件机制 + `opencode.json` | AGENTS.md + 配置 | hooks / skills / subagents / plugins / MCP |
-| 会话分支 | **内置树状 branch / fork** | — | — | — |
-| 脚本编排工具 | **内置 Codemode** | — | — | — |
-| 嵌入自身程序 | **SDK + RPC + JSON 流 + print** | — | 非交互模式 | headless 模式 |
-| 强项 | 可塑性、模型自由、嵌入能力 | 开源、provider 广、社区大 | 与 ChatGPT 生态贴合、**沙箱** | 生态成熟、skills/plugin 生态最丰富 |
-| 短板 | 很多能力要自己装包 | 定制深度不如 Pi | 与 OpenAI 绑定较深 | 闭源、绑定 Anthropic |
+| 维度         | **Pi**                                           | **OpenCode**                       | **Codex CLI**                                             | **Claude Code**                            |
+| ------------ | ------------------------------------------------ | ---------------------------------- | --------------------------------------------------------- | ------------------------------------------ |
+| 定位         | 可改造的 Agent harness                           | 「开源 AI coding agent」           | 轻量终端 coding agent                                     | 终端里的 agentic 工具                      |
+| 许可证       | 开源                                             | **MIT**                            | **Apache-2.0**                                            | **闭源**（GitHub 仓库无 OSS 许可证）       |
+| 实现语言     | TypeScript                                       | TypeScript                         | Rust                                                      | TypeScript                                 |
+| 发行         | npm / 安装脚本 / nix                             | npm / brew / pacman / mise 等      | npm `@openai/codex` / brew cask / 独立安装脚本            | npm `@anthropic-ai/claude-code`            |
+| 模型策略     | **模型无关**：订阅 / API key / 本地 / 兼容端点   | 多 provider（models.dev 目录驱动） | 主打 ChatGPT 订阅（Sign in with ChatGPT），也支持 API key | 绑定 Anthropic（订阅或 API key）           |
+| 沙箱         | **无内置沙箱**                                   | —                                  | **有**，独立的沙箱与审批文档                              | —                                          |
+| 扩展方式     | extensions / skills / prompts / themes，打包分发 | 插件机制 + `opencode.json`         | AGENTS.md + 配置                                          | hooks / skills / subagents / plugins / MCP |
+| 会话分支     | **内置树状 branch / fork**                       | —                                  | —                                                         | —                                          |
+| 脚本编排工具 | **内置 Codemode**                                | —                                  | —                                                         | —                                          |
+| 嵌入自身程序 | **SDK + RPC + JSON 流 + print**                  | —                                  | 非交互模式                                                | headless 模式                              |
+| 强项         | 可塑性、模型自由、嵌入能力                       | 开源、provider 广、社区大          | 与 ChatGPT 生态贴合、**沙箱**                             | 生态成熟、skills/plugin 生态最丰富         |
+| 短板         | 很多能力要自己装包                               | 定制深度不如 Pi                    | 与 OpenAI 绑定较深                                        | 闭源、绑定 Anthropic                       |
 
 > 表中「—」表示我没找到官方文档明确声明，不等于该工具没有该能力。竞品迭代很快，涉及具体行为请以各自最新文档为准。
 
@@ -231,14 +231,14 @@ Pi 官方文档把话说得很直白：
 
 [Tensorlake 的 14 天实测](https://www.tensorlake.ai/blog/best-ai-coding-agents-2026)在 30 个高难度 agentic tool-use 任务上统一使用 DeepSeek V4 Flash，只换 harness：
 
-| Harness | 通过 | 中位耗时 | 平均 tokens/任务 | 总成本 | 每成功任务成本 |
-| --- | --- | --- | --- | --- | --- |
-| **Pi** | **20/30 (66.7%)** | 132.2s | 558,885 | **$0.56** | **$0.028** |
-| Claude Code | 16/30 (53.3%) | **122.7s** | 741,659 | $3.12 | $0.195 |
-| Codex | 16/30 (53.3%) | 245.0s | 664,772 | $1.29 | $0.081 |
-| OpenCode | 14/30 (46.7%) | 129.7s | 692,195 | $1.03 | $0.073 |
+| Harness     | 通过              | 中位耗时   | 平均 tokens/任务 | 总成本    | 每成功任务成本 |
+| ----------- | ----------------- | ---------- | ---------------- | --------- | -------------- |
+| **Pi**      | **20/30 (66.7%)** | 132.2s     | 558,885          | **$0.56** | **$0.028**     |
+| Claude Code | 16/30 (53.3%)     | **122.7s** | 741,659          | $3.12     | $0.195         |
+| Codex       | 16/30 (53.3%)     | 245.0s     | 664,772          | $1.29     | $0.081         |
+| OpenCode    | 14/30 (46.7%)     | 129.7s     | 692,195          | $1.03     | $0.073         |
 
-原作者的结论相当直接：*Pi 赢了，而且成本上不是小赢——只交付四个工具的 harness，赢过了交付全套功能的 harness。*
+原作者的结论相当直接：_Pi 赢了，而且成本上不是小赢——只交付四个工具的 harness，赢过了交付全套功能的 harness。_
 
 同一次测试里，Claude Code 耗时最短但最费 token；Codex 通过率与 Claude Code 持平、成本不到一半，但中位耗时 245 秒，基本是其他人的两倍。Tensorlake 的 TL;DR 给 Pi 的评语是「按 token 计费时的最优选择」，同时提醒 **almost no guardrails**。
 
@@ -246,16 +246,16 @@ Pi 官方文档把话说得很直白：
 
 [Composio 的测试](https://composio.dev/content/best-agent-harness-deepseek-v4-flash)覆盖面更广（8 个 harness），同样是 DeepSeek V4 Flash + 30 个任务：
 
-| Harness | 通过 | 中位耗时 | 每成功任务成本 |
-| --- | --- | --- | --- |
-| **Pi** | **20/30 (66.7%)** | 132.2s | **$0.028** ⚠️ |
-| Prime Agent | 15/24 有效 (62.5%) | ~4 min | $0.131 |
-| OMP (Oh My Pi) | 17/30 (56.7%) | 272.4s | $0.103 |
-| Claude Code | 16/30 (53.3%) | **122.7s** | $0.195 |
-| Codex | 16/30 (53.3%) | ~4 min | $0.081 |
-| DeepAgents | 16/30 (53.3%) | 187.1s | $0.045 |
-| Hermes | 15/30 (50%) | 175.5s | $0.056+ |
-| OpenCode | 14/30 (46.7%) | 129.7s | $0.073 |
+| Harness        | 通过               | 中位耗时   | 每成功任务成本 |
+| -------------- | ------------------ | ---------- | -------------- |
+| **Pi**         | **20/30 (66.7%)**  | 132.2s     | **$0.028** ⚠️  |
+| Prime Agent    | 15/24 有效 (62.5%) | ~4 min     | $0.131         |
+| OMP (Oh My Pi) | 17/30 (56.7%)      | 272.4s     | $0.103         |
+| Claude Code    | 16/30 (53.3%)      | **122.7s** | $0.195         |
+| Codex          | 16/30 (53.3%)      | ~4 min     | $0.081         |
+| DeepAgents     | 16/30 (53.3%)      | 187.1s     | $0.045         |
+| Hermes         | 15/30 (50%)        | 175.5s     | $0.056+        |
+| OpenCode       | 14/30 (46.7%)      | 129.7s     | $0.073         |
 
 ⚠️ **官方 caveat 必须一起看**：
 
@@ -263,7 +263,7 @@ Pi 官方文档把话说得很直白：
 
 也就是说 Pi 那行的**成本数字不是严格可比的**——推理设置不同，且用到了两家 provider。成功率那列没有这个问题。
 
-这个测试里最值得学的其实不是谁赢，而是**为什么 Claude Code 最贵**。原文拆解：它总 token 量与 Codex、OMP 接近，但**只有 1.5% 的 token 命中缓存**，而 Codex 约 70%、OMP 约 57%；未命中输入的价格是缓存输入的 5 倍。原文结论：*token count alone does not explain cost*——真正决定成本的是「新鲜输入 / 缓存输入 / 输出」的配比。
+这个测试里最值得学的其实不是谁赢，而是**为什么 Claude Code 最贵**。原文拆解：它总 token 量与 Codex、OMP 接近，但**只有 1.5% 的 token 命中缓存**，而 Codex 约 70%、OMP 约 57%；未命中输入的价格是缓存输入的 5 倍。原文结论：_token count alone does not explain cost_——真正决定成本的是「新鲜输入 / 缓存输入 / 输出」的配比。
 
 注意耗时与 token 并不正相关：Claude Code 和 OMP 都用了约 742,000 tokens/任务，但前者快了一倍以上；Hermes 只用了约 192,000 tokens，却仍比 Claude Code 慢。
 
@@ -271,14 +271,14 @@ Pi 官方文档把话说得很直白：
 
 [Composio 第二轮](https://composio.dev/content/pi-vs-opencode)换用 DeepSeek V4 Pro (0813)、max reasoning，同样 30 个高难度任务：
 
-| Harness | 通过 | 每成功任务 | 每共同成功任务 | 平均 tokens | 平均轮次 |
-| --- | --- | --- | --- | --- | --- |
-| **Pi Agent** | **21/30 (70%)** | $0.078 | $0.031 | 924,990 | 16.3 |
-| Codex | 20/30 (66.7%) | n/a\* | $0.031 | 383,722 | n/a |
-| DeepSeek Harness | 20/30 (66.7%) | $0.076 | $0.028 | 88,562 | 0.9 |
-| OpenCode | 19/30 (63.3%) | $0.119 | $0.032 | 710,140 | 13.1 |
-| Claude Code | 19/30 (63.3%) | n/a\* | $0.074 | 649,900 | 12.1 |
-| Hermes | 18/30 (60%) | n/a\* | $0.037 | 113,894 | 6.5 |
+| Harness          | 通过            | 每成功任务 | 每共同成功任务 | 平均 tokens | 平均轮次 |
+| ---------------- | --------------- | ---------- | -------------- | ----------- | -------- |
+| **Pi Agent**     | **21/30 (70%)** | $0.078     | $0.031         | 924,990     | 16.3     |
+| Codex            | 20/30 (66.7%)   | n/a\*      | $0.031         | 383,722     | n/a      |
+| DeepSeek Harness | 20/30 (66.7%)   | $0.076     | $0.028         | 88,562      | 0.9      |
+| OpenCode         | 19/30 (63.3%)   | $0.119     | $0.032         | 710,140     | 13.1     |
+| Claude Code      | 19/30 (63.3%)   | n/a\*      | $0.074         | 649,900     | 12.1     |
+| Hermes           | 18/30 (60%)     | n/a\*      | $0.037         | 113,894     | 6.5      |
 
 \* 成本统计不完整，不可比。
 
@@ -292,13 +292,13 @@ Pi 全程花费 $1.64，OpenCode $2.25。
 
 测试条件相当克制——同一台机器、固定 `claude-sonnet-4-5`、全新配置目录（无 MCP、无用户设置、无 memory）、空工作区（无指令文件）、绕过权限。任务是回一句 `Reply with exactly: OK`（22 个字符），每个 harness 跑三次。
 
-| | Claude Code | OpenCode |
-| --- | --- | --- |
-| System prompt | 27,344 字符，3 个 block | 9,324 字符，1 个 block |
-| 工具 schema | **27 个工具**，99,778 字符 | 10 个工具，20,856 字符 |
-| 首轮注入的 `<system-reminder>` | 7,997 字符 | 无 |
-| 用户输入 | 22 字符 | 22 字符 |
-| **首轮载荷（标定后）** | **~32,800 tokens** | **~6,900 tokens** |
+|                                | Claude Code                | OpenCode               |
+| ------------------------------ | -------------------------- | ---------------------- |
+| System prompt                  | 27,344 字符，3 个 block    | 9,324 字符，1 个 block |
+| 工具 schema                    | **27 个工具**，99,778 字符 | 10 个工具，20,856 字符 |
+| 首轮注入的 `<system-reminder>` | 7,997 字符                 | 无                     |
+| 用户输入                       | 22 字符                    | 22 字符                |
+| **首轮载荷（标定后）**         | **~32,800 tokens**         | **~6,900 tokens**      |
 
 大头在工具 schema：Claude Code 那 ~33k tokens 里约 24k 是 27 个工具的定义，OpenCode 那 ~6.9k 里约 4.8k 是工具定义。
 
@@ -326,14 +326,14 @@ Pi 1.0.0                             2026-10-01   ← benchmark 之后
 
 也就是说表里那个 $0.028，测的是 **0.8x 时期的 Pi**。而在那之后 Pi 又做了一轮直接指向成本的优化，从官方 CHANGELOG 能逐条对上：
 
-| 版本 | 日期 | 成本相关的改动 |
-| --- | --- | --- |
-| 0.86.0 | 2026-09-19 | **Prompt cache warming**：长时间工具运行和空闲时用「成本感知的刷新」保活缓存 |
-| 0.86.0 | 2026-09-19 | **Transcript-aware prompt/tool updates**：resume 和分支切换时保留指令与工具变更，同时**保住已缓存前缀** |
-| 0.99.0 | 2026-09-29 | 修复经 `ctx.executeTool()`（如 codemode 脚本）调用的工具**用量被漏记**，现在计入会话成本 |
-| **1.0.0** | **2026-10-01** | **Leaner codemode：提示词 token 减少约 40%** |
-| 1.0.1 | 2026-10-03 | Anthropic 工具在会话中途新增/重定义时改为**内联定义**，重定义同名工具**不再重发整份工具列表**，从而保住 prompt cache |
-| 1.0.1 | 2026-10-03 | 修复 Bedrock 上 OpenAI 模型在输入超过 272k token 时仍按短上下文费率计费的定价分层错误 |
+| 版本      | 日期           | 成本相关的改动                                                                                                       |
+| --------- | -------------- | -------------------------------------------------------------------------------------------------------------------- |
+| 0.86.0    | 2026-09-19     | **Prompt cache warming**：长时间工具运行和空闲时用「成本感知的刷新」保活缓存                                         |
+| 0.86.0    | 2026-09-19     | **Transcript-aware prompt/tool updates**：resume 和分支切换时保留指令与工具变更，同时**保住已缓存前缀**              |
+| 0.99.0    | 2026-09-29     | 修复经 `ctx.executeTool()`（如 codemode 脚本）调用的工具**用量被漏记**，现在计入会话成本                             |
+| **1.0.0** | **2026-10-01** | **Leaner codemode：提示词 token 减少约 40%**                                                                         |
+| 1.0.1     | 2026-10-03     | Anthropic 工具在会话中途新增/重定义时改为**内联定义**，重定义同名工具**不再重发整份工具列表**，从而保住 prompt cache |
+| 1.0.1     | 2026-10-03     | 修复 Bedrock 上 OpenAI 模型在输入超过 272k token 时仍按短上下文费率计费的定价分层错误                                |
 
 做法不是删功能，而是改写法：
 
@@ -345,11 +345,11 @@ Pi 1.0.0                             2026-10-01   ← benchmark 之后
 
 CHANGELOG 给的数字是「一次 GPT-5.6 请求从约 5,300 降到约 3,300 tokens」。我在本地实测了这条：固定 `codemode` 开启，固定一句 `Reply with exactly: OK`，只换 Pi 版本。
 
-| 模型 | 0.99.2 | 1.0.2 | 变化 |
-| --- | --- | --- | --- |
-| deepseek-v4-flash | 4,127 | **2,403** | **−41.8%** |
-| gpt-5.6-luna | 3,211 | **1,703** | **−47.0%** |
-| *官方 changelog（GPT-5.6）* | *5,300* | *3,300* | *−37.7%* |
+| 模型                        | 0.99.2  | 1.0.2     | 变化       |
+| --------------------------- | ------- | --------- | ---------- |
+| deepseek-v4-flash           | 4,127   | **2,403** | **−41.8%** |
+| gpt-5.6-luna                | 3,211   | **1,703** | **−47.0%** |
+| _官方 changelog（GPT-5.6）_ | _5,300_ | _3,300_   | _−37.7%_   |
 
 每组 5 次取中位数，指标是每轮实际发送的上下文总量（`input + cacheRead + cacheWrite`）。绝对值和官方不同是正常的（模型与 tokenizer 不同），但**降幅落在同一量级、且略大**——「−40%」这个说法可以当成已被独立复现，而不只是 changelog 里的一句话。
 
@@ -368,20 +368,20 @@ bunx @earendil-works/pi-coding-agent@0.99.2 \
 
 测这个的时候有个坑值得记下来。第一次跑出来 `input` 只有个位数，看着像上下文极小：
 
-| 模型 | input | cacheRead | cacheWrite |
-| --- | --- | --- | --- |
-| deepseek-v4-flash（0.99.2） | 31 | **4,096** | 0 |
-| gpt-5.6-luna（0.99.2） | 3 | 0 | **3,208** |
+| 模型                        | input | cacheRead | cacheWrite |
+| --------------------------- | ----- | --------- | ---------- |
+| deepseek-v4-flash（0.99.2） | 31    | **4,096** | 0          |
+| gpt-5.6-luna（0.99.2）      | 3     | 0         | **3,208**  |
 
 真相是**整段上下文被缓存接走了**。真实指标是 `input + cacheRead + cacheWrite`，而不是 `input`。
 
 这个区别在钱上被放大得很厉害。以 `deepseek-v4-flash` 的标价为例：
 
-| | USD / 1M tokens |
-| --- | --- |
-| input | 0.15 |
-| output | 0.6 |
-| **cacheRead** | **0.003** |
+|               | USD / 1M tokens |
+| ------------- | --------------- |
+| input         | 0.15            |
+| output        | 0.6             |
+| **cacheRead** | **0.003**       |
 
 **缓存读取比新鲜输入便宜 50 倍。** 所以「上下文变大了 = 变贵了」这个直觉，在开了缓存之后就不成立——真正贵的永远是**没命中缓存的那部分**。
 
@@ -391,11 +391,11 @@ bunx @earendil-works/pi-coding-agent@0.99.2 \
 
 顺手用同一套方法量了一下「裸 Pi」和「装了一堆包之后」的差别（同样 `deepseek-v4-flash`、同样 prompt）：
 
-| 配置 | 每轮上下文 |
-| --- | --- |
-| 裸 Pi · 默认四工具 · 无包 · 无 codemode | **1,940** |
-| 裸 Pi · 默认四工具 + codemode | 2,403 |
-| 装了 11 个 Pi 包之后 | **25,651** |
+| 配置                                    | 每轮上下文 |
+| --------------------------------------- | ---------- |
+| 裸 Pi · 默认四工具 · 无包 · 无 codemode | **1,940**  |
+| 裸 Pi · 默认四工具 + codemode           | 2,403      |
+| 装了 11 个 Pi 包之后                    | **25,651** |
 
 裸 Pi 的固定开销确实只有约 1,940 tokens，这坐实了前面那个「harness 本身很轻」的说法。但**日常开销里 90% 以上来自扩展包，不是 Pi 本身**。
 
@@ -421,7 +421,7 @@ bunx @earendil-works/pi-coding-agent@0.99.2 \
 
 ## 一句话总结
 
-Pi 不是功能最多的 Agent，但它可能是**最容易被改造成你自己想要的样子**的那个：模型随便换、会话能分叉、工具能编排、程序能嵌入、扩展能打包分享。它的基本立场是 *adapt Pi to your workflows, not the other way around*——你拥有的应该是自己的工作流，而不是在迁就工具。
+Pi 不是功能最多的 Agent，但它可能是**最容易被改造成你自己想要的样子**的那个：模型随便换、会话能分叉、工具能编排、程序能嵌入、扩展能打包分享。它的基本立场是 _adapt Pi to your workflows, not the other way around_——你拥有的应该是自己的工作流，而不是在迁就工具。
 
 而现有实测数据也支持这个方向：在固定同一个底层模型、只换 harness 的对照测试里，Pi 的通过率最高（20/30 ~ 21/30），每成功任务成本最低（$0.028）；在更严格的条件控制下，它的首轮固定上下文开销也远小于 Claude Code。
 

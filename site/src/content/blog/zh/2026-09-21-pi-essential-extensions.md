@@ -1,7 +1,7 @@
 ---
 title: "Pi 插件推荐：12 个真正提升日常开发体验的扩展"
 description: "推荐 12 个实测可用的 Pi 扩展与技能：pi-web-access、pi-codegraph、ponytail、context-mode、pi-custom-system-prompt、pi-notify、pi-interactive-shell、pi-custom-provider-fix、pi-subagent、addyosmani/agent-skills、@juicesharp/rpiv-ask-user-question 与 pi-cc-extensions，附安装命令与适用场景"
-pubDatetime: 2026-09-21T00:00:00Z
+pubDatetime: 2026-10-06T00:00:00Z
 modDatetime: 2026-10-07T00:00:00Z
 draft: false
 tags:
@@ -16,20 +16,20 @@ Pi 本身内置 MCP、Codemode、Subagent 调度等能力，但真正决定「�
 
 先给个速查表：
 
-| 包 | 一句话 | 类型 |
-| --- | --- | --- |
-| `pi-web-access` | 搜索 + 网页/视频内容提取，零配置 | extension |
-| `@vndv/pi-codegraph` | 用 tree-sitter 图索引代替 grep/read 循环 | extension |
-| `ponytail` | 让 Agent 少写代码（实测 -54% LOC） | extension + skill |
-| `context-mode` | 沙箱执行 + 知识库，省上下文窗口 | extension + skill |
-| `pi-custom-system-prompt` | 从 Markdown 注入自定义系统提示词 | extension |
-| `@pi-unipi/notify` | 任务完成后推送到手机/桌面 | extension + skill |
-| `pi-interactive-shell` | 在 TUI 浮层里跑交互式 CLI 和子 Agent | extension + skill |
-| `pi-custom-provider-fix` | 向导式配置自定义 LLM 接口 | extension |
-| `@mjakl/pi-subagent` | 委派给专职子 Agent | extension |
-| `addyosmani/agent-skills` | 25 个工程技能 + 9 个生命周期命令 | skills |
-| `@juicesharp/rpiv-ask-user-question` | 让模型先问你，别替你猜 | extension |
-| `pi-cc-extensions` | 类 Claude Code TUI + CC Dark/Light 主题 | extension + theme |
+| 包                                   | 一句话                                   | 类型              |
+| ------------------------------------ | ---------------------------------------- | ----------------- |
+| `pi-web-access`                      | 搜索 + 网页/视频内容提取，零配置         | extension         |
+| `@vndv/pi-codegraph`                 | 用 tree-sitter 图索引代替 grep/read 循环 | extension         |
+| `ponytail`                           | 让 Agent 少写代码（实测 -54% LOC）       | extension + skill |
+| `context-mode`                       | 沙箱执行 + 知识库，省上下文窗口          | extension + skill |
+| `pi-custom-system-prompt`            | 从 Markdown 注入自定义系统提示词         | extension         |
+| `@pi-unipi/notify`                   | 任务完成后推送到手机/桌面                | extension + skill |
+| `pi-interactive-shell`               | 在 TUI 浮层里跑交互式 CLI 和子 Agent     | extension + skill |
+| `pi-custom-provider-fix`             | 向导式配置自定义 LLM 接口                | extension         |
+| `@mjakl/pi-subagent`                 | 委派给专职子 Agent                       | extension         |
+| `addyosmani/agent-skills`            | 25 个工程技能 + 9 个生命周期命令         | skills            |
+| `@juicesharp/rpiv-ask-user-question` | 让模型先问你，别替你猜                   | extension         |
+| `pi-cc-extensions`                   | 类 Claude Code TUI + CC Dark/Light 主题  | extension + theme |
 
 ## 1. pi-web-access：联网能力<span id="pi-web-access"></span>
 
@@ -103,13 +103,13 @@ pi install npm:@vndv/pi-codegraph
 
 官方给了一组实测数字（headless Claude Code 改 tiangolo 的 full-stack-fastapi-template，12 个 feature ticket，n=4，Haiku 4.5）：
 
-| 指标 | vs 无 skill 基线 |
-| --- | --- |
-| LOC | **-54%** |
-| tokens | -22% |
-| 成本 | -20% |
-| 时间 | -27% |
-| 安全项保留 | 100% |
+| 指标       | vs 无 skill 基线 |
+| ---------- | ---------------- |
+| LOC        | **-54%**         |
+| tokens     | -22%             |
+| 成本       | -20%             |
+| 时间       | -27%             |
+| 安全项保留 | 100%             |
 
 对照组里，单纯「YAGNI + 一行流」的 prompt 也能减 LOC，但 token、成本、时间反而上升；ponytail 是唯一各项全降且不牺牲安全性的方案——校验、错误处理、安全、可访问性明确不在它的削减范围内。
 
@@ -183,12 +183,12 @@ pi install npm:@pi-unipi/notify
 
 四种模式：
 
-| 模式 | 行为 | 适合 |
-| --- | --- | --- |
-| `interactive` | 浮层，你随时接管 | 编辑器、REPL、SSH |
-| `hands-free` | 轮询状态，安静更新 | dev server、构建 |
-| `dispatch` | 完成时通知，不轮询 | 派活给子 Agent |
-| `monitor` | 只在触发条件命中时唤醒 | 守 watcher、日志、测试 |
+| 模式          | 行为                   | 适合                   |
+| ------------- | ---------------------- | ---------------------- |
+| `interactive` | 浮层，你随时接管       | 编辑器、REPL、SSH      |
+| `hands-free`  | 轮询状态，安静更新     | dev server、构建       |
+| `dispatch`    | 完成时通知，不轮询     | 派活给子 Agent         |
+| `monitor`     | 只在触发条件命中时唤醒 | 守 watcher、日志、测试 |
 
 用户侧命令是 `/spawn`、`/attach`、`/dismiss`——不需要手写工具调用。
 
@@ -297,15 +297,15 @@ pi install npm:@juicesharp/rpiv-ask-user-question
 
 [minuque/pi-cc-extensions](https://pi.dev/packages/pi-cc-extensions) 是这批里唯一同时声明 **extension + theme** 的包：它把 Pi 的 TUI 输出改成类 Claude Code 的样式，并随包附带两套主题 `cc-dark` / `cc-light`，装完用 `/theme` 直接切换。
 
-| 功能 | 说明 | 入口 |
-| --- | --- | --- |
-| Claude Code UI | 工具摘要、折叠展开、rich edit/write diff，`on` / `compact` / `off` 三档 | `/ccstyle` |
-| 主题 | CC Dark、CC Light | `/theme` |
-| 上下文检查 | 看上下文占用，预览 System prompt、Memory、Skills、Tools definition | `/context` |
-| Session / Subagent 引用 | 搜索并注入历史 Session 或现有 SubAgent 的上下文 | `@` |
-| Markdown 增强 | Mermaid 图、提示框、URL 链接化 | 自动生效 |
-| Fullscreen mode | 工具卡单击展开、hover 高亮、回到底部按钮 | `TUIMODE=fullscreen` |
-| 状态栏 | 模型、上下文、缓存、费用、git，并适配 `@narumitw/pi-usage` 实时显额度 | `/ccstyle` |
+| 功能                    | 说明                                                                    | 入口                 |
+| ----------------------- | ----------------------------------------------------------------------- | -------------------- |
+| Claude Code UI          | 工具摘要、折叠展开、rich edit/write diff，`on` / `compact` / `off` 三档 | `/ccstyle`           |
+| 主题                    | CC Dark、CC Light                                                       | `/theme`             |
+| 上下文检查              | 看上下文占用，预览 System prompt、Memory、Skills、Tools definition      | `/context`           |
+| Session / Subagent 引用 | 搜索并注入历史 Session 或现有 SubAgent 的上下文                         | `@`                  |
+| Markdown 增强           | Mermaid 图、提示框、URL 链接化                                          | 自动生效             |
+| Fullscreen mode         | 工具卡单击展开、hover 高亮、回到底部按钮                                | `TUIMODE=fullscreen` |
+| 状态栏                  | 模型、上下文、缓存、费用、git，并适配 `@narumitw/pi-usage` 实时显额度   | `/ccstyle`           |
 
 `/ccstyle` 是六页签配置面板（Style / Features / UI / Diff / Thinking / Footer），配置落在 `~/.pi/agent/pi-cc-extensions.json`。
 
