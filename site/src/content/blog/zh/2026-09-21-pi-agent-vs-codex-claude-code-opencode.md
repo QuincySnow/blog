@@ -417,7 +417,7 @@ bunx @earendil-works/pi-coding-agent@0.99.2 \
 想换着模型用、比较不同模型效果   → Pi（/model 就切）
 ```
 
-个人日常开发我是这样分工的：Pi 当主力，浏览器/联网类的活儿交给扩展（之前写过一篇 [Pi 插件推荐](/blog/posts/zh/2026-09-21-pi-essential-extensions)，列了 10 个），需要并行时用 subagent 类扩展，需要无人值守就套容器。
+个人日常开发我是这样分工的：Pi 当主力，浏览器/联网类的活儿交给扩展（之前写过一篇 [Pi 插件推荐](/blog/posts/zh/2026-09-21-pi-essential-extensions)，列了 12 个），需要并行时用 subagent 类扩展，需要无人值守就套容器。
 
 ## 一句话总结
 

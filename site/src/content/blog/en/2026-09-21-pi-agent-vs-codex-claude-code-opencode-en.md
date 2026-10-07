@@ -418,7 +418,7 @@ Open source, works immediately, GUI-friendly  → OpenCode
 Switch models often to compare their output   → Pi (/model and go)
 ```
 
-My own split for daily work: Pi as the primary, extensions for anything browser- or web-related (I wrote a [roundup of 10 Pi extensions](/blog/posts/en/2026-09-21-pi-essential-extensions-en) earlier), a subagent-style package when I want parallelism, and a container whenever it runs unattended.
+My own split for daily work: Pi as the primary, extensions for anything browser- or web-related (I wrote a [roundup of 12 Pi extensions](/blog/posts/en/2026-09-21-pi-essential-extensions-en) earlier), a subagent-style package when I want parallelism, and a container whenever it runs unattended.
 
 ## The one-line summary
 

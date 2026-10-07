@@ -1,8 +1,8 @@
 ---
-title: "Pi 插件推荐：10 个真正提升日常开发体验的扩展"
-description: "推荐 10 个实测可用的 Pi 扩展与技能：pi-web-access、pi-codegraph、ponytail、context-mode、pi-custom-system-prompt、pi-notify、pi-interactive-shell、pi-custom-provider-fix、pi-subagent 与 addyosmani/agent-skills，附安装命令与适用场景"
+title: "Pi 插件推荐：12 个真正提升日常开发体验的扩展"
+description: "推荐 12 个实测可用的 Pi 扩展与技能：pi-web-access、pi-codegraph、ponytail、context-mode、pi-custom-system-prompt、pi-notify、pi-interactive-shell、pi-custom-provider-fix、pi-subagent、addyosmani/agent-skills、@juicesharp/rpiv-ask-user-question 与 pi-cc-extensions，附安装命令与适用场景"
 pubDatetime: 2026-09-21T00:00:00Z
-modDatetime: 2026-09-21T00:00:00Z
+modDatetime: 2026-10-07T00:00:00Z
 draft: false
 tags:
   - AI
@@ -12,7 +12,7 @@ tags:
 lang: zh
 ---
 
-Pi 本身内置 MCP、Codemode、Subagent 调度等能力，但真正决定「用得顺不顺手」的，往往是几个扩展和技能包。这篇文章推荐 10 个我实际在用的，每个都给出安装命令、核心能力、适用场景，以及一些需要注意的地方。
+Pi 本身内置 MCP、Codemode、Subagent 调度等能力，但真正决定「用得顺不顺手」的，往往是几个扩展和技能包。这篇文章推荐 12 个我实际在用的，每个都给出安装命令、核心能力、适用场景，以及一些需要注意的地方。
 
 先给个速查表：
 
@@ -28,6 +28,8 @@ Pi 本身内置 MCP、Codemode、Subagent 调度等能力，但真正决定「�
 | `pi-custom-provider-fix` | 向导式配置自定义 LLM 接口 | extension |
 | `@mjakl/pi-subagent` | 委派给专职子 Agent | extension |
 | `addyosmani/agent-skills` | 25 个工程技能 + 9 个生命周期命令 | skills |
+| `@juicesharp/rpiv-ask-user-question` | 让模型先问你，别替你猜 | extension |
+| `pi-cc-extensions` | 类 Claude Code TUI + CC Dark/Light 主题 | extension + theme |
 
 ## 1. pi-web-access：联网能力<span id="pi-web-access"></span>
 
@@ -254,6 +256,103 @@ bunx skills add addyosmani/agent-skills --skill code-review-and-quality
 
 ⚠️ **单技能安装只复制 `skills/<name>/`，不含仓库根部的 `references/`**，所以引用共享 checklist 的路径会失效。要么整仓装，要么 clone 后手动补 `references/`。
 
+## 11. @juicesharp/rpiv-ask-user-question：让它先问你<span id="ask-user-question"></span>
+
+[@juicesharp/rpiv-ask-user-question](https://pi.dev/packages/@juicesharp/rpiv-ask-user-question) 只给 Pi 加一个工具——`ask_user_question`——但挡住的是最贵的一类损失：模型替你猜需求，猜错了你要花一小时撤销。
+
+给一句带真实决策的指令（比如「给 API client 加缓存」），模型不再自己拍板，终端底部弹出问卷：
+
+```text
+ Feature Type │ Design Tab │ Testing │ Release │ Submit
+───────────────────────────────────────────────────────
+ Which real development task are we planning right now?
+
+  1. Bug fix (Recommended)   a defect to reproduce and fix
+  2. New feature             net-new behaviour or surface
+  3. Refactor                same behaviour, better shape
+  4. Perf tuning             make an existing path faster
+
+ Type something.
+ ↑↓ move · Enter choose · n note · Tab switch · Esc abandon
+```
+
+- 一次最多 **4 个问题**装进一个带页签的对话框，不是四次打断；Submit 页先列一遍答案，并点名哪些还空着
+- 每题 **2–4 个作者写好的选项**，每个自带一行说明，讲代价而不只是标签
+- 永远能自己写：每题都追加一行 `Type something.`。输入时 `Shift+Enter` 换行、`Ctrl+G` 拉外部编辑器、`Ctrl+U` 清空；翻别的选项再回来草稿还在
+- 选项可以挂 markdown `preview`（ASCII 草图、代码、图表、配置），在选项旁边用带边框的盒子渲染；宽终端并排、窄于 100 列则堆到下方
+- `n` 加备注：问题页上是单题备注，Submit 页上是全局备注，分别以 `user notes:` / `global note:` 交给模型，且备注不算作答
+- `Ctrl+]` 折叠对话框去翻上面的对话记录，再展开答案不丢
+
+```bash
+pi install npm:@juicesharp/rpiv-ask-user-question
+```
+
+装完重启 Pi 会话，零配置可用。可选项在 `~/.config/rpiv-ask-user-question/config.json`（只读不写）：`collapseKey` 换折叠键（默认 `ctrl+]`，`"off"` 关闭）、`guidance.promptSnippet` 调它「多爱问」、`guidance.description` 整体替换工具描述。JSON 写坏退回默认并给警告，不会报错中断。
+
+要求 Node.js 22+ 和带交互终端（或 RPC/ACP host）的 Pi。**非交互运行里工具会从列表里摘掉**，而不是每次调用都失败。没有原生依赖、不需要编译器、不需要 API key——它自己不发模型请求。
+
+⚠️ 两个坑：`Ctrl+]` 在 `]` 位于上档的键盘布局（如拉美布局）上按不出来，把 `collapseKey` 改成 `"alt+o"` 即可；另外若 Pi 运行期间有包管理器改动了磁盘上的模块，对话框会加载失败并退回成在聊天里提问——修好安装后重启，进程内无法恢复。
+
+## 12. pi-cc-extensions：Claude Code 风格界面与主题<span id="pi-cc-extensions"></span>
+
+[minuque/pi-cc-extensions](https://pi.dev/packages/pi-cc-extensions) 是这批里唯一同时声明 **extension + theme** 的包：它把 Pi 的 TUI 输出改成类 Claude Code 的样式，并随包附带两套主题 `cc-dark` / `cc-light`，装完用 `/theme` 直接切换。
+
+| 功能 | 说明 | 入口 |
+| --- | --- | --- |
+| Claude Code UI | 工具摘要、折叠展开、rich edit/write diff，`on` / `compact` / `off` 三档 | `/ccstyle` |
+| 主题 | CC Dark、CC Light | `/theme` |
+| 上下文检查 | 看上下文占用，预览 System prompt、Memory、Skills、Tools definition | `/context` |
+| Session / Subagent 引用 | 搜索并注入历史 Session 或现有 SubAgent 的上下文 | `@` |
+| Markdown 增强 | Mermaid 图、提示框、URL 链接化 | 自动生效 |
+| Fullscreen mode | 工具卡单击展开、hover 高亮、回到底部按钮 | `TUIMODE=fullscreen` |
+| 状态栏 | 模型、上下文、缓存、费用、git，并适配 `@narumitw/pi-usage` 实时显额度 | `/ccstyle` |
+
+`/ccstyle` 是六页签配置面板（Style / Features / UI / Diff / Thinking / Footer），配置落在 `~/.pi/agent/pi-cc-extensions.json`。
+
+```bash
+pi install npm:pi-cc-extensions
+```
+
+要求 Node.js ≥ 22.19.0、Pi `^0.84.0`。MIT 许可，rich diff 改编自 [`MasuRii/pi-tool-display`](https://github.com/MasuRii/pi-tool-display)。
+
+### 底栏图标与 Nerd Font 兜底<span id="nerd-font"></span>
+
+底栏默认用 Nerd Font 图标（`footerNerdIcons: true`）：git 分支、缓存命中，以及 MCP 连接数 `U+F06A5`（`md-power_plug`）。
+
+字体不对时，链路是这样断的：
+
+```text
+pi-cc-extensions 要画 U+F06A5
+        ↓
+JetBrains Mono NL 没有这个 glyph
+        ↓
+终端向 fontconfig 要 fallback
+        ↓
+fontconfig 找不到 Nerd Font Symbols
+        ↓
+渲染成 □（豆腐块）
+```
+
+先确认到底缺不缺：
+
+```bash
+fc-list ':charset=f06a5'      # 谁有 U+F06A5，空 = 没有
+fc-match ':charset=f06a5'     # 实际会 fallback 到谁
+```
+
+缺就装 Symbols Only（几百 KB，只补图标、不动正文字体）：
+
+```bash
+mkdir -p ~/.local/share/fonts && cd ~/.local/share/fonts
+curl -LO https://github.com/ryanoasis/nerd-fonts/releases/latest/download/NerdFontsSymbolsOnly.zip
+unzip -o NerdFontsSymbolsOnly.zip && rm NerdFontsSymbolsOnly.zip
+fc-cache -fv
+```
+
+macOS 解压到 `~/Library/Fonts/` 即可；想连正文字体一起换成打过补丁的版本，同仓库还有 `JetBrainsMono.zip`。
+
+不想装字体也有退路——`~/.pi/agent/pi-cc-extensions.json` 里把 `"footerNerdIcons"` 设为 `false`，底栏退回纯文本，功能不受影响。
+
 ## 怎么搭配
 
 按痛点选，不用全装：
@@ -269,6 +368,8 @@ bunx skills add addyosmani/agent-skills --skill code-review-and-quality
 接第三方模型      → pi-custom-provider-fix
 想并行干活        → @mjakl/pi-subagent
 想要成套工程规范  → addyosmani/agent-skills
+模型老替你猜需求  → @juicesharp/rpiv-ask-user-question
+想要好看主题界面  → pi-cc-extensions
 ```
 
 有两个功能重叠需要注意：`context-mode` 和 `pi-web-access` 都会影响工具调用方式，`context-mode` 更激进（强制沙箱执行），`pi-web-access` 更聚焦联网能力；同时装没问题，但路由规则可能需要用 `ctx_purge` / 重启确认一下实际生效行为。
@@ -285,6 +386,8 @@ pi install npm:@pi-unipi/notify
 pi install npm:pi-interactive-shell
 pi install git:github.com/youugiuhiuh/pi-custom-provider-fix
 pi install npm:@mjakl/pi-subagent
+pi install npm:@juicesharp/rpiv-ask-user-question
+pi install npm:pi-cc-extensions
 bunx skills add addyosmani/agent-skills
 ```
 
@@ -299,5 +402,6 @@ Pi 官方的包页面都挂着同一句安全提示，我觉得值得原样转�
 ## 参考
 
 - [pi.dev/packages](https://pi.dev/packages)
+- [ryanoasis/nerd-fonts](https://github.com/ryanoasis/nerd-fonts)
 - [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills)
 - [vercel-labs/skills CLI](https://github.com/vercel-labs/skills)

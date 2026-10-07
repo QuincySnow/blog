@@ -1,8 +1,8 @@
 ---
-title: "10 Pi extensions worth installing"
-description: "Ten extensions and skill packs that actually improve day-to-day work in Pi: pi-web-access, pi-codegraph, ponytail, context-mode, pi-custom-system-prompt, pi-notify, pi-interactive-shell, pi-custom-provider-fix, pi-subagent, and addyosmani/agent-skills — with install commands and caveats"
+title: "12 Pi extensions worth installing"
+description: "Twelve extensions and skill packs that actually improve day-to-day work in Pi: pi-web-access, pi-codegraph, ponytail, context-mode, pi-custom-system-prompt, pi-notify, pi-interactive-shell, pi-custom-provider-fix, pi-subagent, addyosmani/agent-skills, @juicesharp/rpiv-ask-user-question, and pi-cc-extensions — with install commands and caveats"
 pubDatetime: 2026-09-21T00:00:00Z
-modDatetime: 2026-09-21T00:00:00Z
+modDatetime: 2026-10-07T00:00:00Z
 draft: false
 tags:
   - AI
@@ -12,7 +12,7 @@ tags:
 lang: en
 ---
 
-Pi ships with MCP, Codemode, and subagent scheduling built in, but what decides whether it feels good in daily use is usually a handful of extensions and skill packs. Here are ten I actually run, each with its install command, what it does, when it helps, and the caveats.
+Pi ships with MCP, Codemode, and subagent scheduling built in, but what decides whether it feels good in daily use is usually a handful of extensions and skill packs. Here are twelve I actually run, each with its install command, what it does, when it helps, and the caveats.
 
 The short version:
 
@@ -28,6 +28,8 @@ The short version:
 | `pi-custom-provider-fix` | Wizard-driven custom LLM endpoint setup | extension |
 | `@mjakl/pi-subagent` | Delegate to specialist subagents | extension |
 | `addyosmani/agent-skills` | 25 engineering skills + 9 lifecycle commands | skills |
+| `@juicesharp/rpiv-ask-user-question` | Make the model ask instead of guess | extension |
+| `pi-cc-extensions` | Claude Code-style TUI + CC Dark/Light themes | extension + theme |
 
 ## 1. pi-web-access: getting online<span id="pi-web-access"></span>
 
@@ -254,9 +256,106 @@ bunx skills add addyosmani/agent-skills --skill code-review-and-quality
 
 ⚠️ **A single-skill install copies only `skills/<name>/`, not the repo-level `references/`**, so paths to shared checklists break. Install the whole repo, clone it, or copy the needed checklist into a `references/` directory inside the installed skill.
 
+## 11. @juicesharp/rpiv-ask-user-question: make it ask first<span id="ask-user-question"></span>
+
+[@juicesharp/rpiv-ask-user-question](https://pi.dev/packages/@juicesharp/rpiv-ask-user-question) adds exactly one tool to Pi — `ask_user_question` — and blocks the most expensive kind of loss there is: the model guessing at your requirements, and you spending an hour undoing a wrong assumption.
+
+Give it an instruction with a real decision buried in it (say, “add caching to the API client”) and instead of picking for you, a questionnaire takes over the bottom of the terminal:
+
+```text
+ Feature Type │ Design Tab │ Testing │ Release │ Submit
+───────────────────────────────────────────────────────
+ Which real development task are we planning right now?
+
+  1. Bug fix (Recommended)   a defect to reproduce and fix
+  2. New feature             net-new behaviour or surface
+  3. Refactor                same behaviour, better shape
+  4. Perf tuning             make an existing path faster
+
+ Type something.
+ ↑↓ move · Enter choose · n note · Tab switch · Esc abandon
+```
+
+- Up to **four questions** arrive in one tabbed dialog, not four interruptions; the Submit tab lists your answers and names anything still blank before you commit
+- Each question carries **2–4 authored options**, every one with a description of what it means or what it costs
+- You can always answer in your own words: a `Type something.` row is appended to every question. While typing, `Shift+Enter` adds a line, `Ctrl+G` opens Pi's configured external editor, `Ctrl+U` clears the draft — and browsing another option and coming back keeps what you wrote
+- An option can carry a markdown `preview` (ASCII mockup, code, diagram, config) rendered in a bordered box beside the option list; wide terminals go side by side, anything under 100 columns stacks it underneath
+- `n` attaches a note: per-question on a question tab, one global note for the whole questionnaire on the Submit tab. They reach the model as `user notes:` / `global note:`, and neither marks a question answered
+- `Ctrl+]` collapses the dialog so you can scroll the transcript behind it, then brings it back with your answers intact
+
+```bash
+pi install npm:@juicesharp/rpiv-ask-user-question
+```
+
+Restart your Pi session and it works with zero configuration. Optional settings live in `~/.config/rpiv-ask-user-question/config.json` (read, never written): `collapseKey` changes the collapse key (default `ctrl+]`, and `"off"` disables it), `guidance.promptSnippet` tunes how eagerly the model asks, and `guidance.description` replaces the tool description outright. Malformed JSON falls back to the defaults with a warning rather than erroring out.
+
+Requires Node.js 22+ and Pi with an interactive terminal (or an RPC/ACP host). **In non-interactive runs the tool is removed from the model's tool list** instead of failing on every call. No native dependencies, no compiler, no API keys — it makes no model calls of its own.
+
+⚠️ Two gotchas: `Ctrl+]` is unreachable on keyboard layouts where `]` sits on the shifted layer (Latin American among them) — set `collapseKey` to something like `"alt+o"`. And if a package manager replaces the dialog's modules on disk while Pi is running, the dialog fails to load and the model falls back to asking in chat text; repair the install and restart, because it isn't recoverable inside the running process.
+
+## 12. pi-cc-extensions: Claude Code styling and themes<span id="pi-cc-extensions"></span>
+
+[minuque/pi-cc-extensions](https://pi.dev/packages/pi-cc-extensions) is the only entry here that declares both **extension and theme**: it re-skins Pi's TUI output in a Claude Code-like style and ships two bundled themes, `cc-dark` and `cc-light`, switchable with `/theme`.
+
+| Feature | What it does | Entry point |
+| --- | --- | --- |
+| Claude Code UI | Tool summaries, collapse/expand, rich edit/write diffs, `on` / `compact` / `off` modes | `/ccstyle` |
+| Themes | CC Dark, CC Light | `/theme` |
+| Context inspection | Context usage plus previews of system prompt, memory, skills and tool definitions | `/context` |
+| Session / subagent reference | Search and inject context from a past session or an existing subagent | `@` |
+| Markdown extras | Mermaid diagrams, callouts, URL linking | automatic |
+| Fullscreen mode | Click a tool card to expand, hover highlighting, jump-to-bottom button | `TUIMODE=fullscreen` |
+| Status bar | Model, context, cache, cost, git; adapts to `@narumitw/pi-usage` for live quota | `/ccstyle` |
+
+`/ccstyle` is a six-tab settings panel (Style / Features / UI / Diff / Thinking / Footer); config lives in `~/.pi/agent/pi-cc-extensions.json`.
+
+```bash
+pi install npm:pi-cc-extensions
+```
+
+Requires Node.js ≥ 22.19.0 and Pi `^0.84.0`. It's MIT licensed, and the rich diff is adapted from [`MasuRii/pi-tool-display`](https://github.com/MasuRii/pi-tool-display).
+
+### Footer icons and the Nerd Font fallback<span id="nerd-font"></span>
+
+The footer uses Nerd Font icons by default (`footerNerdIcons: true`): git branch, cache hits, and the MCP connection count at `U+F06A5` (`md-power_plug`).
+
+When the font is wrong, the chain breaks like this:
+
+```text
+pi-cc-extensions wants to draw U+F06A5
+        ↓
+JetBrains Mono NL has no such glyph
+        ↓
+the terminal asks fontconfig for a fallback
+        ↓
+fontconfig finds no Nerd Font Symbols
+        ↓
+you get □ (tofu)
+```
+
+First check whether you're actually missing it:
+
+```bash
+fc-list ':charset=f06a5'      # who has U+F06A5; empty means nobody
+fc-match ':charset=f06a5'     # where the fallback actually lands
+```
+
+If it's missing, install Symbols Only (a few hundred KB — it adds icons only and leaves your text font alone):
+
+```bash
+mkdir -p ~/.local/share/fonts && cd ~/.local/share/fonts
+curl -LO https://github.com/ryanoasis/nerd-fonts/releases/latest/download/NerdFontsSymbolsOnly.zip
+unzip -o NerdFontsSymbolsOnly.zip && rm NerdFontsSymbolsOnly.zip
+fc-cache -fv
+```
+
+On macOS just unzip into `~/Library/Fonts/`. If you'd rather swap the text font for a patched build too, the same repo also ships `JetBrainsMono.zip`.
+
+If you don't want to install a font at all, set `"footerNerdIcons": false` in `~/.pi/agent/pi-cc-extensions.json` — the footer falls back to plain text and nothing else changes.
+
 ## How to combine them
 
-Pick by pain point; you don't need all ten:
+Pick by pain point; you don't need all twelve:
 
 ```text
 Research all the time     → pi-web-access
@@ -269,6 +368,8 @@ Needs interactive CLIs    → pi-interactive-shell
 Third-party models        → pi-custom-provider-fix
 Parallel work             → @mjakl/pi-subagent
 Want a full eng playbook  → addyosmani/agent-skills
+Model guesses your intent → @juicesharp/rpiv-ask-user-question
+Want a nicer TUI theme    → pi-cc-extensions
 ```
 
 One overlap is worth knowing about: `context-mode` and `pi-web-access` both influence how tools get called. context-mode is more aggressive (it enforces sandboxed execution), pi-web-access is narrower (web access only). Installing both is fine, but verify the actual routing behaviour after a restart or `ctx_purge`.
@@ -285,6 +386,8 @@ pi install npm:@pi-unipi/notify
 pi install npm:pi-interactive-shell
 pi install git:github.com/youugiuhiuh/pi-custom-provider-fix
 pi install npm:@mjakl/pi-subagent
+pi install npm:@juicesharp/rpiv-ask-user-question
+pi install npm:pi-cc-extensions
 bunx skills add addyosmani/agent-skills
 ```
 
@@ -299,7 +402,8 @@ Several of the above are not risk-free: `context-mode` takes over tool routing, 
 ## References
 
 - [pi.dev/packages](https://pi.dev/packages)
+- [ryanoasis/nerd-fonts](https://github.com/ryanoasis/nerd-fonts)
 - [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills)
 - [vercel-labs/skills CLI](https://github.com/vercel-labs/skills)
 
-For the Chinese version of this article, see [Pi 插件推荐：10 个真正提升日常开发体验的扩展](/blog/posts/zh/2026-09-21-pi-essential-extensions).
+For the Chinese version of this article, see [Pi 插件推荐：12 个真正提升日常开发体验的扩展](/blog/posts/zh/2026-09-21-pi-essential-extensions).
