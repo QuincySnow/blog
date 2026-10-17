@@ -1,8 +1,8 @@
 ---
 title: "Run Upstream GNOME on Ubuntu: Switching Sessions and a Missing App-Grid Mystery"
-description: "Keep Ubuntu's ecosystem and get a near-stock GNOME desktop: install gnome-session and pick the GNOME session at the login screen — plus debugging a GNOME Shell 50.1 bug where every app-grid icon disappeared"
+description: "Keep Ubuntu's ecosystem and get a near-stock GNOME desktop: install gnome-session and pick the GNOME session at the login screen — plus debugging a GNOME Shell 50.1 bug where every app-grid icon disappeared, caused by EGO's Dash to Dock and Apps Menu and fixed with Ubuntu Dock + Ubuntu AppIndicators"
 pubDatetime: 2026-09-08T00:00:00Z
-modDatetime: 2026-09-08T00:00:00Z
+modDatetime: 2026-09-10T00:00:00Z
 draft: false
 tags:
   - Ubuntu
@@ -70,7 +70,7 @@ gnome
 
 Most things worked fine in the GNOME session, but one day I pressed Super to open the overview and clicked into the app grid — **not a single app icon was there**. Just an empty grid, and no way to launch apps from it.
 
-At the time more than one third-party GNOME Shell extension was enabled on my system (including `dash-to-dock@micxgx.gmail.com` from earlier tinkering), so my first instinct was to blame them.
+At the time more than one third-party GNOME Shell extension was enabled on my system (including `dash-to-dock@micxgx.gmail.com` and `apps-menu@gnome-shell-extensions.gcampax.github.com` from earlier tinkering), so my first instinct was to blame them.
 
 ## 5. Debugging: First Rule Out "Ubuntu Desktop Packages Left Behind"
 
@@ -88,9 +88,16 @@ gsettings set org.gnome.shell disable-user-extensions true
 
 Log out → log back in → open the app grid → **the icons are back**. The issue reproduces and reverses cleanly, which basically confirms extensions are responsible.
 
-## 6. Conclusion: The Culprit Is Dash to Dock from EGO
+## 6. Conclusion: Both Culprits Are Third-Party Extensions from EGO
 
-The exact culprit turned out to be **the third-party [Dash to Dock](https://extensions.gnome.org/extension/307/dash-to-dock/) installed from extensions.gnome.org** (extension 307, UUID `dash-to-dock@micxgx.gmail.com`). That build is incompatible with GNOME Shell 50.1, and enabling it makes every app-grid icon disappear.
+There turned out to be two culprits, both **third-party extensions installed from [extensions.gnome.org](https://extensions.gnome.org/)**:
+
+| Extension | UUID | Symptom |
+| --- | --- | --- |
+| [Dash to Dock](https://extensions.gnome.org/extension/307/dash-to-dock/) (extension 307) | `dash-to-dock@micxgx.gmail.com` | Enabling it makes every app-grid icon disappear |
+| [Apps Menu](https://extensions.gnome.org/extension/6/apps-menu/) | `apps-menu@gnome-shell-extensions.gcampax.github.com` | Also breaks the app grid |
+
+Both builds are incompatible with GNOME Shell 50.1.
 
 - This was **not** caused by keeping Ubuntu's original desktop around — leaving the Ubuntu session and its packages installed is completely fine.
 - The right fix is managing extensions, not touching system desktop packages.
@@ -107,15 +114,31 @@ Then **enable exactly one extension at a time**, log out and back in, and check 
 
 ```bash
 gnome-extensions enable dash-to-dock@micxgx.gmail.com
+gnome-extensions enable apps-menu@gnome-shell-extensions.gcampax.github.com
 ```
 
-Test the prime suspect (Dash to Dock) first. Once you find the incompatible extension, decide: wait for the author to update it, switch to an alternative, or just keep it disabled — instead of dropping every other extension for the sake of one, and certainly not uninstalling the Ubuntu desktop.
+Test these two prime suspects first. Once you find the incompatible extension, decide: wait for the author to update it, switch to an alternative, or just keep it disabled — instead of dropping every other extension for the sake of one, and certainly not uninstalling the Ubuntu desktop.
 
-**If you simply want a dock**: you don't need the third-party Dash to Dock. Ubuntu ships its own **Ubuntu Dock** (UUID `ubuntu-dock@ubuntu.com`), which is essentially Ubuntu's maintained fork of Dash to Dock — Ubuntu keeps it in sync with the GNOME Shell version shipped by the system, so it's far more reliable than a third-party EGO build. Enable it right inside the GNOME session:
+### The fix: switch to Ubuntu's own versions
+
+Disable/remove the EGO Dash to Dock and Apps Menu, and use the ones Ubuntu ships (the `ubuntu-*` packages) instead:
 
 ```bash
+# Disable the third-party EGO builds
+gnome-extensions disable dash-to-dock@micxgx.gmail.com
+gnome-extensions disable apps-menu@gnome-shell-extensions.gcampax.github.com
+
+# Enable the Ubuntu-maintained ones
 gnome-extensions enable ubuntu-dock@ubuntu.com
+gnome-extensions enable ubuntu-appindicators@ubuntu.com
 ```
+
+That's the **Ubuntu Dock + Ubuntu AppIndicators** pair:
+
+- **Ubuntu Dock** (`ubuntu-dock@ubuntu.com`) is Ubuntu's maintained fork of Dash to Dock — it replaces the EGO Dash to Dock.
+- **Ubuntu AppIndicators** (`ubuntu-appindicators@ubuntu.com`) is Ubuntu's maintained AppIndicator support (covering the tray-icon / system-monitor class of features) — it replaces the community EGO extensions for that.
+
+Ubuntu keeps both in sync with the GNOME Shell version shipped by the system, so they're far more reliable than third-party EGO builds — and they work fine inside the GNOME session.
 
 ## 8. Final Setup and Reminders
 
@@ -136,6 +159,7 @@ Key takeaways, repeated for emphasis:
 2. Stock GNOME ≠ deleting Ubuntu customizations — it means **switching sessions**. Both coexist and are reversible, which is the safest path.
 3. Enable extensions **one at a time**, never all at once, so problems are easy to isolate.
 4. Right after a major GNOME release (like the 50.x series this time), third-party extensions are most likely to break — suspect extensions first whenever the overview or app grid misbehaves.
+5. For dock / AppIndicator needs, **prefer Ubuntu's built-in `ubuntu-dock@ubuntu.com` and `ubuntu-appindicators@ubuntu.com`** over third-party EGO builds like Dash to Dock or Apps Menu.
 
 ---
 

@@ -1,8 +1,8 @@
 ---
 title: "在 Ubuntu 上用回上游原版 GNOME：会话切换与「应用网格图标消失」排查"
-description: "Ubuntu 生态 + 原版 GNOME 桌面：安装 gnome-session 并在登录界面选择 GNOME 会话，再记录 GNOME Shell 50.1 下应用网格（九宫格）图标全部消失的排查过程与修复方法"
+description: "Ubuntu 生态 + 原版 GNOME 桌面：安装 gnome-session 并在登录界面选择 GNOME 会话，再记录 GNOME Shell 50.1 下应用网格（九宫格）图标全部消失的排查过程与修复方法——元凶是从 EGO 装的 Dash to Dock 与 Apps Menu，换成 Ubuntu Dock + Ubuntu AppIndicators 即可修复"
 pubDatetime: 2026-09-08T00:00:00Z
-modDatetime: 2026-09-08T00:00:00Z
+modDatetime: 2026-09-10T00:00:00Z
 draft: false
 tags:
   - Ubuntu
@@ -70,7 +70,7 @@ gnome
 
 切到 GNOME 会话后大部分功能都正常，但某次我按 Super 打开概览、点进应用网格（九宫格）时，发现**网格里一个应用图标都没有**，只剩一个空荡荡的网格，应用都点不出来。
 
-当时系统里启用了不止一个第三方 GNOME Shell 扩展（包括之前折腾时装的 `dash-to-dock@micxgx.gmail.com` 等），所以第一反应其实是怀疑它们。
+当时系统里启用了不止一个第三方 GNOME Shell 扩展（包括之前折腾时装的 `dash-to-dock@micxgx.gmail.com`、`apps-menu@gnome-shell-extensions.gcampax.github.com` 等），所以第一反应其实是怀疑它们。
 
 ## 五、排查：先排除「Ubuntu 桌面包没删」的嫌疑
 
@@ -88,9 +88,16 @@ gsettings set org.gnome.shell disable-user-extensions true
 
 注销 → 重新登录 → 再打开九宫格 → **图标回来了**。问题复现/恢复完全可控，基本锁定就是扩展引起的。
 
-## 六、结论：罪魁祸首是从 EGO 安装的 Dash to Dock
+## 六、结论：罪魁祸首都是从 EGO 安装的扩展
 
-最终定位到具体元凶：**从 [extensions.gnome.org](https://extensions.gnome.org/extension/307/dash-to-dock/) 安装的第三方 Dash to Dock**（extension 307，UUID `dash-to-dock@micxgx.gmail.com`）。这个版本与 GNOME Shell 50.1 不兼容，启用后会导致应用网格（九宫格）图标全部消失。
+最终定位到两个元凶，都是**从 [extensions.gnome.org](https://extensions.gnome.org/) 安装的第三方扩展**：
+
+| 扩展 | UUID | 后果 |
+| --- | --- | --- |
+| [Dash to Dock](https://extensions.gnome.org/extension/307/dash-to-dock/)（extension 307） | `dash-to-dock@micxgx.gmail.com` | 启用后应用网格（九宫格）图标全部消失 |
+| [Apps Menu](https://extensions.gnome.org/extension/6/apps-menu/) | `apps-menu@gnome-shell-extensions.gcampax.github.com` | 同样导致应用网格异常 |
+
+这两个版本都与 GNOME Shell 50.1 不兼容。
 
 - 这不是「Ubuntu 原桌面没有删除」造成的，保留 Ubuntu 会话与扩展包完全没问题。
 - 正确做法是管理好扩展，而不是动系统桌面包。
@@ -107,15 +114,31 @@ gsettings set org.gnome.shell disable-user-extensions false
 
 ```bash
 gnome-extensions enable dash-to-dock@micxgx.gmail.com
+gnome-extensions enable apps-menu@gnome-shell-extensions.gcampax.github.com
 ```
 
-建议第一个就测最可疑的 Dash to Dock。逐个测下来，命中不兼容的扩展后再决定：等作者更新、换替代品，或者干脆保持禁用——而不是为了一个扩展放弃所有其它扩展，更不是卸载 Ubuntu 桌面。
+建议先测最可疑的这两个。逐个测下来，命中不兼容的扩展后再决定：等作者更新、换替代品，或者干脆保持禁用——而不是为了一个扩展放弃所有其它扩展，更不是卸载 Ubuntu 桌面。
 
-**如果你只是想要一个 Dock**：不需要第三方 Dash to Dock。Ubuntu 自带的 **Ubuntu Dock**（UUID `ubuntu-dock@ubuntu.com`）本身就是 Dash to Dock 的 Ubuntu 维护分支，Ubuntu 会随系统同步适配 GNOME Shell 版本，兼容性比从 EGO 装第三方版靠谱得多。在 GNOME 会话里启用它即可：
+### 修复方法：改用 Ubuntu 自带的那两个
+
+从 EGO 装的 Dash to Dock 和 Apps Menu 直接禁用/删掉，换成 Ubuntu 自带（`ubuntu-*` 包）的对应版本即可：
 
 ```bash
+# 禁用从 EGO 装的第三方版
+gnome-extensions disable dash-to-dock@micxgx.gmail.com
+gnome-extensions disable apps-menu@gnome-shell-extensions.gcampax.github.com
+
+# 启用 Ubuntu 维护的版本
 gnome-extensions enable ubuntu-dock@ubuntu.com
+gnome-extensions enable ubuntu-appindicators@ubuntu.com
 ```
+
+也就是 **Ubuntu Dock + Ubuntu AppIndicators** 这套组合：
+
+- **Ubuntu Dock**（`ubuntu-dock@ubuntu.com`）本身就是 Dash to Dock 的 Ubuntu 维护分支，顶替 EGO 上的 Dash to Dock。
+- **Ubuntu AppIndicators**（`ubuntu-appindicators@ubuntu.com`）是 Ubuntu 维护的 AppIndicator 支持（对应 System Monitor / 托盘图标一类需求），顶替 EGO 上那套社区扩展。
+
+这两个都由 Ubuntu 随系统同步适配 GNOME Shell 版本，兼容性比从 EGO 装第三方版靠谱得多，在 GNOME 会话里照样能用。
 
 ## 八、最终配置与注意事项
 
@@ -136,3 +159,4 @@ Ubuntu
 2. 换原版 GNOME ≠ 删 Ubuntu 定制，而是**换会话**，两者可共存、可回退，最安全。
 3. 扩展**逐个启用**，别一次全开，出问题才好定位。
 4. GNOME 大版本刚更新时（比如这次的 50.x）第三方扩展最容易出兼容问题，遇到 Overview / App Grid 异常先怀疑扩展。
+5. Dock / AppIndicator 这类需求**优先用 Ubuntu 自带的 `ubuntu-dock@ubuntu.com` 和 `ubuntu-appindicators@ubuntu.com`**，别从 EGO 装 Dash to Dock、Apps Menu 这些第三方版。
