@@ -3,3 +3,6 @@ node_modules/
 
 # codegraph index cache
 .codegraph/
+
+# unipi
+.unipi/
