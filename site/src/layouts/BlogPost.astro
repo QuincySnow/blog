@@ -7,6 +7,7 @@ import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import Header from '../components/Header.astro';
 import { i18n } from '../i18n';
+import 'rehype-callouts/theme/github';
 
 type Props = CollectionEntry<'blog'>['data'] & {
 	dataI18nTitle?: string;
@@ -178,9 +179,30 @@ import { withBase } from '../consts';
 			.prose-content img {
 				border-radius: 10px;
 				box-shadow: 0 2px 12px rgba(var(--text-heading), 0.08);
+				cursor: zoom-in;
 			}
 			[data-theme="dark"] .prose-content img {
 				box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+			}
+			.medium-zoom-image--opened {
+				cursor: zoom-out;
+				z-index: 9999;
+			}
+			.medium-zoom-overlay {
+				z-index: 9998 !important;
+			}
+			/* Callouts (rehype-callouts) */
+			.callout {
+				border-radius: 0 8px 8px 0;
+				background: rgba(var(--gray-light), 0.35);
+				margin: 1.5em 0;
+			}
+			[data-theme="dark"] .callout {
+				background: rgba(255, 255, 255, 0.04);
+				border-left-color: var(--rc-color-dark, var(--rc-color-default));
+			}
+			[data-theme="dark"] .callout-title {
+				color: var(--rc-color-dark, var(--rc-color-default));
 			}
 			.prose-content strong {
 				font-weight: 700;
@@ -666,6 +688,23 @@ import { withBase } from '../consts';
 					runAll();
 				}
 			})();
+		</script>
+		<script>
+			import mediumZoom from 'medium-zoom';
+
+			function initZoom() {
+				const isDark = document.documentElement.dataset.theme === 'dark';
+				mediumZoom('.prose-content img', {
+					background: isDark ? 'rgba(15, 18, 25, 0.92)' : 'rgba(255, 255, 255, 0.95)',
+					margin: 24,
+				});
+			}
+
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', initZoom);
+			} else {
+				initZoom();
+			}
 		</script>
 	</body>
 </html>

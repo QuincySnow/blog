@@ -233,3 +233,8 @@ Magpie addresses real architectural bottlenecks in local AI development workflow
 - Extends seamlessly with existing OpenCode and Pi plugin packages.
 
 Repository: [https://github.com/yetone/magpie](https://github.com/yetone/magpie)
+
+---
+
+> [!TIP]
+> All features covered in this article were tested on Magpie's open-source release. Highly recommended if you are looking to streamline and secure your local AI agent setup.

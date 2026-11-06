@@ -239,4 +239,5 @@ export OPENAI_API_KEY="magpie-local"
 
 ---
 
+> [!TIP]
 > 本文所涉及功能均基于 Magpie 开源版本实测。如果你也在搭建本地 Agent 基础设施，非常推荐上手一试。
