@@ -35,6 +35,8 @@ In short: **it pushes protocol adaptation, multi-account pooling, secret desensi
 
 Crucially, **Magpie is a GUI-first desktop and web console**. Even though it services terminal CLI and editor agents, users configure their entire workflow—adding provider keys, mapping models to agents, toggling privacy rules, and installing middleware—through an intuitive visual interface, eliminating the need to memorize CLI subcommands or hand-edit config files.
 
+![Magpie Architecture Overview: Agents routed through local gateway to cloud & local models](/blog/images/magpie/architecture.svg)
+
 ---
 
 ## 1. High-Performance Gateway Architecture for Agents
@@ -96,6 +98,8 @@ Configuring privacy in Magpie requires zero terminal work:
 - **"Try it out" Real-time Sandbox**: The UI provides an interactive test box. Paste a code block containing real keys or names, and the right-hand panel immediately renders the exact masked text upstream vendors will receive, complete with entity badges.
 - **Shield Badges in Live Logs**: In the gateway invocation logs, any request that had values masked displays a distinct shield badge and count. Hovering reveals the entity types, and clicking opens the inspection drawer (real values are never persisted to disk).
 - **Analytics Dashboard**: The **Observability → Masking** tab charts 7-day and 30-day summaries filtered by agent, provider, and entity type, showing you exactly what was shielded from vendor servers.
+
+![Magpie Privacy Masking Analytics & Audit Records](/blog/images/magpie/masking-light.png)
 
 ---
 
@@ -173,6 +177,10 @@ Once launched, complete setup visually in the GUI:
 1. **Add Providers**: On the **Providers** page, add your API keys, OAuth subscriptions, or local Ollama endpoints.
 2. **Assign Models**: On the **Agents** page, pick default models for each agent from dropdown menus.
 3. **Turn on Privacy**: Under **Settings → Privacy**, check the masking toggles.
+
+![Magpie Add Provider Interface](/blog/images/magpie/add-light.png)
+
+![Magpie Agents Model Management](/blog/images/magpie/agents-light.png)
 
 ### 2. Connect Pi Agent
 
