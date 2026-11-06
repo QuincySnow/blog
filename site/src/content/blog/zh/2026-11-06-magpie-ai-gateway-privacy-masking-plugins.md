@@ -140,30 +140,33 @@ export function onEvent(ev, ctx) {
 
 使用 Magpie 的典型流程非常简单：**在 GUI 上配好一切，各终端 Agent 只需填一个网关地址。**
 
-### 1. 下载与安装（桌面 GUI 优先，已安装后支持自动更新）
+### 1. 下载与安装（强烈推荐桌面 GUI，不推荐纯 CLI 版）
 
-Magpie 官方提供了全平台的桌面原生 GUI 客户端，安装后自带自动更新能力（An installed magpie updates itself）。可以直接从官网下载，也可以通过官方脚本一键安装：
+**这里强烈建议直接下载全功能的桌面原生 GUI 客户端，极不推荐使用纯 CLI 版本（`magpie-cli-*`）**。Magpie 最具生产力价值的特性——所见即所得的脱敏「试一试」实时沙盒、网关调用日志里的盾牌拦截徽标、多账号卡片式池化管理，以及一键启用的插件市场——全部依托 GUI 呈现。纯 CLI 缺失了这套核心的可视化交互体验，日常调试和维护反而繁琐。
+
+Magpie 客户端自带自动更新能力（*An installed magpie updates itself*），可以通过官网或 GitHub Releases 直接下载桌面版：
 
 - **官网下载**：[usemagpie.ai](https://usemagpie.ai/)
 - **GitHub Releases**：[yetone/magpie/releases](https://github.com/yetone/magpie/releases)
-- **一键脚本安装**（macOS / Linux）：
-  ```bash
-  curl -fsSL https://usemagpie.ai/install.sh | sh
-  ```
-- **各平台安装包速查**：
+- **各平台桌面安装包（强烈推荐）**：
   - **macOS (Apple Silicon)**：`magpie-darwin-arm64.dmg`
   - **macOS (Intel)**：`magpie-darwin-amd64.dmg`
   - **Windows**：`magpie-windows-amd64.exe`（ARM 架构为 `magpie-windows-arm64.exe`）
   - **Linux 桌面版**：`magpie-linux-amd64` / `magpie-linux-arm64`（依赖 GTK 3 与 WebKitGTK 4.1）
-  - **纯终端与服务器版本**：`magpie-cli-<os>-<arch>`（无窗口环境，使用 `magpie web` 在浏览器打开同一控制台）
-- **Docker 容器化**（适合部署在 NAS 或独立服务器）：
+- **官方一键安装脚本**（macOS / Linux）：
   ```bash
-  docker run -d \
-    --name magpie \
-    -p 3425:3425 \
-    -v ~/.config/magpie:/config/magpie \
-    ghcr.io/yetone/magpie:latest
+  curl -fsSL https://usemagpie.ai/install.sh | sh
   ```
+- **无头服务器与 Docker**（仅限无桌面环境的远程服务器或 NAS；个人电脑请勿使用）：
+  - 纯终端版 `magpie-cli-<os>-<arch>` 需搭配 `magpie web` 在远程浏览器中打开 Web 控制台。
+  - Docker 容器化运行：
+    ```bash
+    docker run -d \
+      --name magpie \
+      -p 3425:3425 \
+      -v ~/.config/magpie:/config/magpie \
+      ghcr.io/yetone/magpie:latest
+    ```
 
 启动后进入 GUI 控制台，日常操作全部点选完成：
 1. **添加供应商**：在「供应商（Providers）」页面添加你的 API Key、OAuth 登录账号或本地 Ollama 服务。

@@ -141,30 +141,33 @@ You do not need to install plugins via the command line. In the Magpie GUI:
 
 The workflow is simple: **configure everything in the GUI once, and point your agents to a single gateway port.**
 
-### 1. Download & Install (Desktop GUI with Auto-Updates)
+### 1. Download & Install (Desktop GUI Strongly Recommended; CLI Not Recommended)
 
-Magpie provides native desktop GUI packages for all major operating systems. Once installed, Magpie automatically updates itself:
+**I strongly recommend downloading the native desktop GUI application and avoiding the headless CLI binary (`magpie-cli-*`)**. Magpie's core productivity value—the interactive "Try it out" privacy sandbox, live shield badge request inspection, card-based multi-account pooling, and one-click plugin directory—all center around the visual dashboard. The CLI-only build loses this polished UX and makes day-to-day configuration needlessly tedious.
+
+Installed desktop builds update automatically (*An installed magpie updates itself*). You can download them directly from the official site or GitHub Releases:
 
 - **Official Website**: [usemagpie.ai](https://usemagpie.ai/)
 - **GitHub Releases**: [yetone/magpie/releases](https://github.com/yetone/magpie/releases)
-- **Install Script** (macOS / Linux):
-  ```bash
-  curl -fsSL https://usemagpie.ai/install.sh | sh
-  ```
-- **Platform Packages**:
+- **Desktop Packages (Strongly Recommended)**:
   - **macOS (Apple Silicon)**: `magpie-darwin-arm64.dmg`
   - **macOS (Intel)**: `magpie-darwin-amd64.dmg`
   - **Windows**: `magpie-windows-amd64.exe` (ARM: `magpie-windows-arm64.exe`)
   - **Linux Desktop**: `magpie-linux-amd64` / `magpie-linux-arm64` (requires GTK 3 and WebKitGTK 4.1)
-  - **Terminal / Server Only**: `magpie-cli-<os>-<arch>` (headless mode, access via `magpie web`)
-- **Docker Container** (ideal for NAS or headless servers):
+- **One-Line Install Script** (macOS / Linux):
   ```bash
-  docker run -d \
-    --name magpie \
-    -p 3425:3425 \
-    -v ~/.config/magpie:/config/magpie \
-    ghcr.io/yetone/magpie:latest
+  curl -fsSL https://usemagpie.ai/install.sh | sh
   ```
+- **Headless Servers & Docker** (only for headless remote Linux servers or NAS; avoid on local dev machines):
+  - Headless CLI `magpie-cli-<os>-<arch>` requires running `magpie web` to access the dashboard in a remote browser.
+  - Docker deployment:
+    ```bash
+    docker run -d \
+      --name magpie \
+      -p 3425:3425 \
+      -v ~/.config/magpie:/config/magpie \
+      ghcr.io/yetone/magpie:latest
+    ```
 
 Once launched, complete setup visually in the GUI:
 1. **Add Providers**: On the **Providers** page, add your API keys, OAuth subscriptions, or local Ollama endpoints.
