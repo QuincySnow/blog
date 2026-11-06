@@ -31,6 +31,8 @@ Magpie 是一个运行在本机的 AI 网关与本地控制台。它在本地（
 
 一句话总结它的核心价值：**把 Agent 繁琐的协议转换、多账号池化容灾、敏感数据防护和请求改写工作，全部下沉到本地网关层统一解决。**
 
+更重要的是，**Magpie 是一套「GUI 优先（GUI-First）」的工具**。虽然它服务于各类终端 CLI 和编辑器 Agent，但用户日常所有的配置、多账号绑定、模型分配、脱敏规则调整和插件安装，都在它极为精致流畅的桌面 / Web GUI 界面中点选完成，根本不需要去记一堆复杂的 CLI 子命令或手动手写晦涩的 JSON 配置文件。
+
 ---
 
 ## 核心亮点一：为 Agent 打造的高性能网关架构
@@ -87,6 +89,13 @@ Magpie 的脱敏引擎分为三层：
 - **第二层：超轻量本地 NER 模型（AstrLink Guard）**：对于自然语言中非结构化的人名、私人地址，正则往往难以覆盖。Magpie 内置了仅 39MB 大小的本地模型 AstrLink Guard，能在本地 CPU 或神经网络引擎（如 Apple Silicon NPU）上毫秒级运行，弥补正则规则的短板。
 - **第三层：命中敏感词时切本地模型**：如果你连占位符都不想发给云端，Magpie 提供了「命中脱敏时改用（Fallback to Local）」选项。一旦检测到 Prompt 包含敏感词，网关直接把整个请求分流给本地运行的 Ollama 或 LM Studio 处理，实现完全的物理隔离。
 
+### 4. 纯 GUI 操作：可视化配置与直观观测
+在 Magpie 里配置脱敏几乎零门槛，全在图形界面中完成：
+- **开关一键点选**：进入「设置 → 隐私」，勾选开启「脱敏密钥」与「脱敏个人信息」，下方会自动列出各类细分项（邮箱、手机号、身份证、公网 IP、主机用户名等），每项都有独立开关。
+- **「试一试」实时沙盒**：界面内置了一个交互式测试框，把一段含有真实密钥和名字的代码粘进去，右侧立即实时渲染出云端厂商实际收到的占位符文本，并高亮标记敏感类型，所见即所得。
+- **盾牌徽标与请求追溯**：在网关的实时调用日志里，被脱敏的请求会显示一个醒目的盾牌徽标与被拦截数量。鼠标悬浮可查看脱敏类型，点击可查阅该请求在厂商视角的原文（绝不持久化存储真实敏感值）。
+- **「观测 → 脱敏」数据看板**：提供 7 天与 30 天的多维统计报表，按 Agent、供应商与敏感类型生成清晰的图表，直观了解到底替你拦截了多少次潜在泄露。
+
 ---
 
 ## 核心亮点三：插件体系与网关中间件
@@ -119,38 +128,49 @@ export function onEvent(ev, ctx) {
 }
 ```
 
-社区还开箱即用提供了大量实用中间件：
-- `param-override`：动态覆盖或追加模型参数（如调整 temperature、top_p、max_tokens）；
-- `model-map`：正则表达式级的模型映射与改写；
-- `system-prompt`：跨 Agent 统一注入全局系统提示词（如统一编码规范、团队约束）；
-- `word-guard`：请求与回复的双向敏感词审核；
-- `think-tags`：自动过滤输出中的 `<think>...</think>` 推理标签，或将 reasoning 字段提取为正文。
+### 3. 可视化插件市场：在 GUI 中一键发现与安装
+你完全不需要通过命令行手动安装或配置插件。在 Magpie 的 GUI 界面中：
+- 打开「插件 → 发现」，可以在卡片列表里直接浏览官方推荐插件、社区网关中间件以及打上 GitHub `magpie-plugin` 话题的开源项目。
+- 点击「添加」即可一键安装并自动热重载，无需重启网关。
+- 像 `param-override`（参数覆盖）、`model-map`（模型名字映射）、`system-prompt`（全局提示词注入）、`word-guard`（敏感词双向过滤）以及 `think-tags`（深度思考标签修剪）等常用中间件，直接在界面上填入规则或打开开关即可生效。
 
 ---
 
-## 快速实战：安装与主流 Agent 接入
+## 快速实战：GUI 控制台与主流 Agent 接入
 
-### 1. 安装与启动 Magpie
+使用 Magpie 的典型流程非常简单：**在 GUI 上配好一切，各终端 Agent 只需填一个网关地址。**
 
-在 macOS 或 Linux 上，通过官方脚本一键安装：
+### 1. 下载与安装（桌面 GUI 优先，已安装后支持自动更新）
 
-```bash
-curl -fsSL https://usemagpie.ai/install.sh | sh
-```
+Magpie 官方提供了全平台的桌面原生 GUI 客户端，安装后自带自动更新能力（An installed magpie updates itself）。可以直接从官网下载，也可以通过官方脚本一键安装：
 
-如果你更倾向于容器化或在 NAS/服务器上运行，也可以直接使用 Docker：
+- **官网下载**：[usemagpie.ai](https://usemagpie.ai/)
+- **GitHub Releases**：[yetone/magpie/releases](https://github.com/yetone/magpie/releases)
+- **一键脚本安装**（macOS / Linux）：
+  ```bash
+  curl -fsSL https://usemagpie.ai/install.sh | sh
+  ```
+- **各平台安装包速查**：
+  - **macOS (Apple Silicon)**：`magpie-darwin-arm64.dmg`
+  - **macOS (Intel)**：`magpie-darwin-amd64.dmg`
+  - **Windows**：`magpie-windows-amd64.exe`（ARM 架构为 `magpie-windows-arm64.exe`）
+  - **Linux 桌面版**：`magpie-linux-amd64` / `magpie-linux-arm64`（依赖 GTK 3 与 WebKitGTK 4.1）
+  - **纯终端与服务器版本**：`magpie-cli-<os>-<arch>`（无窗口环境，使用 `magpie web` 在浏览器打开同一控制台）
+- **Docker 容器化**（适合部署在 NAS 或独立服务器）：
+  ```bash
+  docker run -d \
+    --name magpie \
+    -p 3425:3425 \
+    -v ~/.config/magpie:/config/magpie \
+    ghcr.io/yetone/magpie:latest
+  ```
 
-```bash
-docker run -d \
-  --name magpie \
-  -p 3425:3425 \
-  -v ~/.config/magpie:/config/magpie \
-  ghcr.io/yetone/magpie:latest
-```
+启动后进入 GUI 控制台，日常操作全部点选完成：
+1. **添加供应商**：在「供应商（Providers）」页面添加你的 API Key、OAuth 登录账号或本地 Ollama 服务。
+2. **分配模型**：在「Agent」页面，直接为各个 Agent 下拉挑选默认模型。
+3. **开启隐私防护**：在「设置 → 隐私」中一键勾选脱敏开关。
 
-安装完成后，浏览器打开 `http://127.0.0.1:3425` 即可进入图形化配置控制台。在「设置 → 隐私」中一键勾选开启「脱敏密钥」与「脱敏个人信息」。
-
-### 2. 接入 Pi Agent
+### 2. 终端 Agent 接入（仅需指定网关地址）
 
 在 Pi 中，可以直接将自定义 Provider 指向 Magpie 本地网关。编辑 `~/.pi/agent/settings.json`（或直接使用 Pi 的配置向导）：
 

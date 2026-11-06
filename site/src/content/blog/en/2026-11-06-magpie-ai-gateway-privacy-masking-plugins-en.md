@@ -33,6 +33,8 @@ Magpie is an AI gateway and management console running locally on your workstati
 
 In short: **it pushes protocol adaptation, multi-account pooling, secret desensitization, and request modification down into a unified local gateway layer.**
 
+Crucially, **Magpie is a GUI-first desktop and web console**. Even though it services terminal CLI and editor agents, users configure their entire workflow—adding provider keys, mapping models to agents, toggling privacy rules, and installing middleware—through an intuitive visual interface, eliminating the need to memorize CLI subcommands or hand-edit config files.
+
 ---
 
 ## 1. High-Performance Gateway Architecture for Agents
@@ -88,6 +90,13 @@ Magpie uses three complementary detection tiers:
 2. **Lightweight Local NER Model (AstrLink Guard)**: Regex struggles with unstructured natural names or addresses. Magpie includes AstrLink Guard, a compact 39MB model running locally via CPU or Apple Neural Engine to catch natural language entities.
 3. **Fallback to Local Models**: For zero-exposure requirements, Magpie can route requests containing sensitive entities entirely to local Ollama or LM Studio models, avoiding cloud transmission entirely.
 
+### Pure GUI Operation: Visual Configuration & Observability
+Configuring privacy in Magpie requires zero terminal work:
+- **Toggle Controls**: Under **Settings → Privacy**, enable **Mask secrets** and **Mask personal info** with a single click. Granular toggles appear for specific categories (emails, phone numbers, public IPs, IDs, usernames).
+- **"Try it out" Real-time Sandbox**: The UI provides an interactive test box. Paste a code block containing real keys or names, and the right-hand panel immediately renders the exact masked text upstream vendors will receive, complete with entity badges.
+- **Shield Badges in Live Logs**: In the gateway invocation logs, any request that had values masked displays a distinct shield badge and count. Hovering reveals the entity types, and clicking opens the inspection drawer (real values are never persisted to disk).
+- **Analytics Dashboard**: The **Observability → Masking** tab charts 7-day and 30-day summaries filtered by agent, provider, and entity type, showing you exactly what was shielded from vendor servers.
+
 ---
 
 ## 3. Plugin Ecosystem & Gateway Middleware
@@ -120,40 +129,51 @@ export function onEvent(ev, ctx) {
 }
 ```
 
-Community middleware options ready out-of-the-box include:
-- `param-override`: Override temperature, max tokens, or specific model parameters.
-- `model-map`: Regular-expression model mapping and aliasing.
-- `system-prompt`: Inject unified organization or project constraints across all agents.
-- `word-guard`: Bidirectional sensitive word filtering.
-- `think-tags`: Strip reasoning `<think>...</think>` tags or map reasoning tokens to output text.
+### Visual Plugin Store: One-Click Discovery & Setup
+You do not need to install plugins via the command line. In the Magpie GUI:
+- Navigate to **Plugins → Discover** to visually browse featured plugins, community gateway middleware, and GitHub repositories tagged with `magpie-plugin`.
+- Click **Add** to install and hot-reload middleware immediately without restarting the gateway.
+- Essential middleware like `param-override` (parameter rewriting), `model-map` (model name aliasing), `system-prompt` (global prompt injection), `word-guard` (sensitive word filtering), and `think-tags` (reasoning tag trimming) can be configured and activated directly via GUI forms.
 
 ---
 
-## Practical Setup: Connecting Major Agents
+## Practical Setup: GUI Console & Agent Integration
 
-### 1. Install & Launch Magpie
+The workflow is simple: **configure everything in the GUI once, and point your agents to a single gateway port.**
 
-On macOS or Linux:
+### 1. Download & Install (Desktop GUI with Auto-Updates)
 
-```bash
-curl -fsSL https://usemagpie.ai/install.sh | sh
-```
+Magpie provides native desktop GUI packages for all major operating systems. Once installed, Magpie automatically updates itself:
 
-Or run via Docker:
+- **Official Website**: [usemagpie.ai](https://usemagpie.ai/)
+- **GitHub Releases**: [yetone/magpie/releases](https://github.com/yetone/magpie/releases)
+- **Install Script** (macOS / Linux):
+  ```bash
+  curl -fsSL https://usemagpie.ai/install.sh | sh
+  ```
+- **Platform Packages**:
+  - **macOS (Apple Silicon)**: `magpie-darwin-arm64.dmg`
+  - **macOS (Intel)**: `magpie-darwin-amd64.dmg`
+  - **Windows**: `magpie-windows-amd64.exe` (ARM: `magpie-windows-arm64.exe`)
+  - **Linux Desktop**: `magpie-linux-amd64` / `magpie-linux-arm64` (requires GTK 3 and WebKitGTK 4.1)
+  - **Terminal / Server Only**: `magpie-cli-<os>-<arch>` (headless mode, access via `magpie web`)
+- **Docker Container** (ideal for NAS or headless servers):
+  ```bash
+  docker run -d \
+    --name magpie \
+    -p 3425:3425 \
+    -v ~/.config/magpie:/config/magpie \
+    ghcr.io/yetone/magpie:latest
+  ```
 
-```bash
-docker run -d \
-  --name magpie \
-  -p 3425:3425 \
-  -v ~/.config/magpie:/config/magpie \
-  ghcr.io/yetone/magpie:latest
-```
-
-Open `http://127.0.0.1:3425` in your browser to access the web GUI. Under **Settings → Privacy**, enable **Mask secrets** and **Mask personal info**.
+Once launched, complete setup visually in the GUI:
+1. **Add Providers**: On the **Providers** page, add your API keys, OAuth subscriptions, or local Ollama endpoints.
+2. **Assign Models**: On the **Agents** page, pick default models for each agent from dropdown menus.
+3. **Turn on Privacy**: Under **Settings → Privacy**, check the masking toggles.
 
 ### 2. Connect Pi Agent
 
-Configure Magpie as a custom provider in `~/.pi/agent/settings.json`:
+In Pi, point a custom provider to the local gateway in `~/.pi/agent/settings.json`:
 
 ```json
 {
@@ -167,7 +187,7 @@ Configure Magpie as a custom provider in `~/.pi/agent/settings.json`:
 }
 ```
 
-In your Pi session, switch to the routed model:
+In your Pi session:
 ```bash
 /model magpie/claude-3-7-sonnet
 ```
