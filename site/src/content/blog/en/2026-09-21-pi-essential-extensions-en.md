@@ -82,7 +82,27 @@ Key capabilities:
 - **Secret scanning**: Blocks API keys, bearer tokens, and private keys from ever being written into memory
 - **Memory aging & auto-consolidation**: Timestamps entries and automatically merges/compresses memory when hitting capacity limits instead of dropping context silently
 
-Useful commands include `/memory-index-sessions` (index past sessions into SQLite), `/memory-sync-markdown` (sync Markdown memory into SQLite search), and `/memory-interview` (onboarding questionnaire to populate your user profile).
+### The one command to run right after install
+
+Right after installation, run this one-time command in your Pi prompt:
+
+```text
+/memory-index-sessions   # Must-run: indexes all pre-existing Pi sessions into SQLite FTS5
+/memory-interview        # Optional: two-minute onboarding Q&A to prefill your profile
+```
+
+### Everything else is practically fully automated
+
+Once that initial indexing is done, you almost never need to manually type commands. The system works quietly in the background:
+
+- **Automatic background review**: Reviews conversations in the background to distill durable memories without manual intervention.
+- **Instant correction detection**: Saying "don't do that" or correcting code immediately captures the lesson as a persistent mistake memory.
+- **Live session indexing**: New turns stream directly into SQLite — no repeated manual indexing.
+- **Auto-consolidation**: Automatically merges, deduplicates, and prunes stale facts when approaching storage limits.
+- **Secret scanning**: Silently blocks API keys, tokens, and private keys before persistence.
+- **Natural language recall**: Just ask naturally; the model calls `session_search` or `memory_search` on its own.
+
+The only manual command worth keeping handy for daily use is **`/memory-pin <rule>`** — it pins non-negotiable instructions (e.g. "always use Bun in this project", "concise diffs only") to the front of every future session. If you ever want to see what's stored, run `/memory-insights`.
 
 ```bash
 pi install npm:pi-hermes-memory

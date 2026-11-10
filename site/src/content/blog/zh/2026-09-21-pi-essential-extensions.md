@@ -82,7 +82,27 @@ memory_add       memory_replace   memory_remove
 - **内置安全扫描（Secret Scanning）**：在持久化前拦截 API Key、Token、私钥等敏感凭证，避免泄露进记忆库
 - **记忆老化与自动整理（Auto-Consolidation）**：记忆带时间戳，空间占满时自动合并压缩，不会粗暴截断
 
-常用命令：`/memory-index-sessions`（一键索引历史会话）、`/memory-sync-markdown`（同步 Markdown 记忆到 SQLite）、`/memory-interview`（首次使用问答式生成偏好档案）。
+### 装完必做的一步
+
+安装完成后，在 Pi 交互界面中**先跑一次**历史索引：
+
+```text
+/memory-index-sessions   # 必跑：把装插件之前的所有历史会话批量建好 SQLite FTS5 索引
+/memory-interview        # 可选：问答式交互，花两分钟生成你的初始个人画像与技术偏好
+```
+
+### 其余场景：基本完全全自动
+
+跑完一次性索引后，日常使用**几乎不需要再手动敲命令**，整个系统全部在后台静默运转：
+
+- **后台自动复盘提炼**：对话进行中自动审视并提炼关键事实，无需人工干预
+- **纠错即时自动捕获**：指出「别这么写」或更正代码习惯时，立即自动持久化为踩坑教训
+- **增量实时索引**：新产生的会话实时写入 SQLite，不再需要重复手动 run index
+- **容量自动整理**：空间占满时自动做语义合并与淘汰，不会丢数据或报错中断
+- **凭证自动拦截**：静默阻断 API Key、Token 与私钥落地
+- **自然语言直接调用**：查历史只需直接问，模型会自动调用 `session_search` / `memory_search` 去翻库
+
+唯一值得手动用用的日常命令是 **`/memory-pin <规则>`**——把某些不能妥协的硬性铁律（如「本项目强制使用 Bun」「回复只给代码 diff 不写废话」）永久置顶在每个会话的最前列；想看存了什么，随时 `/memory-insights` 瞄一眼即可。
 
 ```bash
 pi install npm:pi-hermes-memory
