@@ -1,6 +1,6 @@
 ---
-title: "12 Pi extensions worth installing"
-description: "Twelve extensions and skill packs that actually improve day-to-day work in Pi: pi-web-access, pi-codegraph, ponytail, context-mode, pi-custom-system-prompt, pi-notify, pi-interactive-shell, pi-custom-provider-fix, pi-subagent, addyosmani/agent-skills, @juicesharp/rpiv-ask-user-question, and pi-cc-extensions — with install commands and caveats"
+title: "11 Pi extensions worth installing"
+description: "Eleven extensions and skill packs that actually improve day-to-day work in Pi: pi-web-access, pi-hermes-memory, ponytail, context-mode, pi-custom-system-prompt, pi-notify, pi-interactive-shell, pi-subagent, addyosmani/agent-skills, @juicesharp/rpiv-ask-user-question, and pi-cc-extensions — with install commands and caveats"
 pubDatetime: 2026-09-21T00:00:00Z
 modDatetime: 2026-10-07T00:00:00Z
 draft: false
@@ -12,20 +12,19 @@ tags:
 lang: en
 ---
 
-Pi ships with MCP, Codemode, and subagent scheduling built in, but what decides whether it feels good in daily use is usually a handful of extensions and skill packs. Here are twelve I actually run, each with its install command, what it does, when it helps, and the caveats.
+Pi ships with MCP, Codemode, and subagent scheduling built in, but what decides whether it feels good in daily use is usually a handful of extensions and skill packs. Here are eleven I actually run, each with its install command, what it does, when it helps, and the caveats.
 
 The short version:
 
 | Package | One line | Type |
 | --- | --- | --- |
 | `pi-web-access` | Search + web/video extraction, zero config | extension |
-| `@vndv/pi-codegraph` | tree-sitter graph index instead of grep/read loops | extension |
+| `pi-hermes-memory` | Persistent memory + session search + procedural skills | extension + skill |
 | `ponytail` | Makes the agent write less code (measured −54% LOC) | extension + skill |
 | `context-mode` | Sandboxed execution + knowledge base to save context | extension + skill |
 | `pi-custom-system-prompt` | Inject your own system prompt from Markdown | extension |
 | `@pi-unipi/notify` | Push completion notifications to your phone | extension + skill |
 | `pi-interactive-shell` | Run interactive CLIs and subagents in a TUI overlay | extension + skill |
-| `pi-custom-provider-fix` | Wizard-driven custom LLM endpoint setup | extension |
 | `@mjakl/pi-subagent` | Delegate to specialist subagents | extension |
 | `addyosmani/agent-skills` | 25 engineering skills + 9 lifecycle commands | skills |
 | `@juicesharp/rpiv-ask-user-question` | Make the model ask instead of guess | extension |
@@ -63,27 +62,33 @@ Many providers are supported — OpenAI, Brave, Parallel, Tavily, Firecrawl, Jin
 pi install npm:pi-web-access
 ```
 
-## 2. pi-codegraph: stop the grep loops<span id="pi-codegraph"></span>
+## 2. pi-hermes-memory: cross-session persistent memory and search<span id="pi-hermes-memory"></span>
 
-[@vndv/pi-codegraph](https://pi.dev/packages/@vndv/pi-codegraph) adds eight structural code tools to Pi:
+By default, closing a session or starting a new one wipes the agent's context completely — preferences, lessons learned, and architecture discussions are lost. [chandra447/pi-hermes-memory](https://github.com/chandra447/pi-hermes-memory) ports Hermes Agent's two-tier memory and procedural skill loop to Pi.
+
+It provides five core tools:
 
 ```text
-codegraph_search    codegraph_node       codegraph_files
-codegraph_callers   codegraph_callees    codegraph_impact
-codegraph_explore   codegraph_status
+session_search   memory_search    skill_manage
+memory_add       memory_replace   memory_remove
 ```
 
-It indexes your project with tree-sitter and answers "how does X reach Y" instead of making the agent grep and read over and over.
+Key capabilities:
 
-Note that it **depends on an external CLI** — installing the extension alone does nothing:
+- **Full-text session search**: Backed by SQLite FTS5, letting you or the agent query historical conversations using natural language (e.g. "What did we discuss about auth last week?")
+- **Two-tier persistent memory**: Distinguishes global memory (`~/.pi/agent/pi-hermes-memory/`) from per-project memory (`~/.pi/agent/projects-memory/<project>/`), categorizing entries across user profiles (`user`), project conventions (`project`), global notes (`memory`), and lessons from mistakes (`failure`)
+- **Procedural skills**: The agent captures *how* it solved complex problems, persisting reusable procedures as native Pi `SKILL.md` files
+- **Background learning & correction detection**: Analyzes conversations every 10 turns (or 15 tool calls) to extract durable facts, and automatically captures corrections whenever you tell it "don't do that"
+- **Secret scanning**: Blocks API keys, bearer tokens, and private keys from ever being written into memory
+- **Memory aging & auto-consolidation**: Timestamps entries and automatically merges/compresses memory when hitting capacity limits instead of dropping context silently
+
+Useful commands include `/memory-index-sessions` (index past sessions into SQLite), `/memory-sync-markdown` (sync Markdown memory into SQLite search), and `/memory-interview` (onboarding questionnaire to populate your user profile).
 
 ```bash
-npm install -g @colbymchenry/codegraph   # must be on PATH
-cd /path/to/project && codegraph init -i # every project needs indexing
-pi install npm:@vndv/pi-codegraph
+pi install npm:pi-hermes-memory
 ```
 
-Requires Node.js ≥ 22.19.0. It's a pure extension — no MCP server to configure.
+Requires Node.js 22+. All data is stored locally in SQLite and Markdown files with zero external server dependencies.
 
 ## 3. ponytail: make it write less code<span id="ponytail"></span>
 
@@ -196,19 +201,7 @@ The user-facing commands are `/spawn`, `/attach` and `/dismiss` — you never ha
 pi install npm:pi-interactive-shell
 ```
 
-## 8. pi-custom-provider-fix: custom LLM endpoints<span id="pi-custom-provider-fix"></span>
-
-Hand-editing `models.json` to wire up a third-party OpenAI-compatible endpoint is painful. [youugiuhiuh/pi-custom-provider-fix](https://github.com/youugiuhiuh/pi-custom-provider-fix) gives you a `/provider-setup` wizard covering API type selection, model discovery, model metadata, compatibility overrides, API keys, and OAuth flows.
-
-It's a fork of [`d4rw1nz/pi-custom-provider`](https://github.com/d4rw1nz/pi-custom-provider), and the thing it fixes is the **empty model preset list**. The preset picker is synchronous while the models.dev catalog is fetched asynchronously, so newer models never appeared. The fork adds caching plus a `prefetchModelCatalog` warm-up, and relaxes the `catalogApi` filter — models.dev doesn't declare a wire API, so the old filter dropped every remote model. With that in place, newer models such as `deepseek-v4.1-flash` (and region-suffixed variants) actually show up.
-
-```bash
-pi install git:github.com/youugiuhiuh/pi-custom-provider-fix
-```
-
-Restart Pi, then run `/provider-setup`.
-
-## 9. @mjakl/pi-subagent: delegate to specialists<span id="pi-subagent"></span>
+## 8. @mjakl/pi-subagent: delegate to specialists<span id="pi-subagent"></span>
 
 [@mjakl/pi-subagent](https://pi.dev/packages/@mjakl/pi-subagent) lets you talk to the main agent the way you'd talk to anyone: "review this diff", "find where authentication is implemented". The main agent decides when to delegate, runs the subagent, and folds the result back into your conversation.
 
@@ -229,7 +222,7 @@ Project agents win on name conflicts. The description decides when the main agen
 pi install npm:@mjakl/pi-subagent
 ```
 
-## 10. addyosmani/agent-skills: 25 engineering skills<span id="agent-skills"></span>
+## 9. addyosmani/agent-skills: 25 engineering skills<span id="agent-skills"></span>
 
 The one entry that isn't a Pi package: [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) encodes senior-engineer workflows as skills covering the whole development lifecycle.
 
@@ -256,7 +249,7 @@ bunx skills add addyosmani/agent-skills --skill code-review-and-quality
 
 ⚠️ **A single-skill install copies only `skills/<name>/`, not the repo-level `references/`**, so paths to shared checklists break. Install the whole repo, clone it, or copy the needed checklist into a `references/` directory inside the installed skill.
 
-## 11. @juicesharp/rpiv-ask-user-question: make it ask first<span id="ask-user-question"></span>
+## 10. @juicesharp/rpiv-ask-user-question: make it ask first<span id="ask-user-question"></span>
 
 [@juicesharp/rpiv-ask-user-question](https://pi.dev/packages/@juicesharp/rpiv-ask-user-question) adds exactly one tool to Pi — `ask_user_question` — and blocks the most expensive kind of loss there is: the model guessing at your requirements, and you spending an hour undoing a wrong assumption.
 
@@ -293,7 +286,7 @@ Requires Node.js 22+ and Pi with an interactive terminal (or an RPC/ACP host). *
 
 ⚠️ Two gotchas: `Ctrl+]` is unreachable on keyboard layouts where `]` sits on the shifted layer (Latin American among them) — set `collapseKey` to something like `"alt+o"`. And if a package manager replaces the dialog's modules on disk while Pi is running, the dialog fails to load and the model falls back to asking in chat text; repair the install and restart, because it isn't recoverable inside the running process.
 
-## 12. pi-cc-extensions: Claude Code styling and themes<span id="pi-cc-extensions"></span>
+## 11. pi-cc-extensions: Claude Code styling and themes<span id="pi-cc-extensions"></span>
 
 [minuque/pi-cc-extensions](https://pi.dev/packages/pi-cc-extensions) is the only entry here that declares both **extension and theme**: it re-skins Pi's TUI output in a Claude Code-like style and ships two bundled themes, `cc-dark` and `cc-light`, switchable with `/theme`.
 
@@ -355,17 +348,16 @@ If you don't want to install a font at all, set `"footerNerdIcons": false` in `~
 
 ## How to combine them
 
-Pick by pain point; you don't need all twelve:
+Pick by pain point; you don't need all eleven:
 
 ```text
 Research all the time     → pi-web-access
-Big repo, lost call paths → pi-codegraph
+Cross-session memory/search → pi-hermes-memory
 Agent over-engineers      → ponytail
 Context always runs out   → context-mode
 Want fixed rules/persona  → pi-custom-system-prompt
 Afraid of missing a done  → @pi-unipi/notify
 Needs interactive CLIs    → pi-interactive-shell
-Third-party models        → pi-custom-provider-fix
 Parallel work             → @mjakl/pi-subagent
 Want a full eng playbook  → addyosmani/agent-skills
 Model guesses your intent → @juicesharp/rpiv-ask-user-question
@@ -378,13 +370,12 @@ One overlap is worth knowing about: `context-mode` and `pi-web-access` both infl
 
 ```bash
 pi install npm:pi-web-access
-pi install npm:@vndv/pi-codegraph
+pi install npm:pi-hermes-memory
 pi install npm:@dietrichgebert/ponytail
 pi install npm:context-mode
 pi install npm:pi-custom-system-prompt
 pi install npm:@pi-unipi/notify
 pi install npm:pi-interactive-shell
-pi install git:github.com/youugiuhiuh/pi-custom-provider-fix
 pi install npm:@mjakl/pi-subagent
 pi install npm:@juicesharp/rpiv-ask-user-question
 pi install npm:pi-cc-extensions
@@ -397,13 +388,14 @@ Then `/reload` inside Pi, and confirm with `pi list`.
 
 Every Pi package page carries the same security note, and it's worth quoting verbatim: **Pi packages can execute code and influence agent behavior. Review the source before installing third-party packages.**
 
-Several of the above are not risk-free: `context-mode` takes over tool routing, `pi-custom-provider-fix` writes your model credentials, and `pi-web-access` reads the search API keys you configure. On a work machine or a sensitive repo, run them through a container first.
+Several of the above are not risk-free: `context-mode` takes over tool routing, `pi-web-access` reads the search API keys you configure, and `pi-hermes-memory` stores historical context and memories in local SQLite and Markdown files (though it includes built-in secret scanning to block credentials). On a work machine or a sensitive repo, run them through a container first.
 
 ## References
 
 - [pi.dev/packages](https://pi.dev/packages)
+- [chandra447/pi-hermes-memory](https://github.com/chandra447/pi-hermes-memory)
 - [ryanoasis/nerd-fonts](https://github.com/ryanoasis/nerd-fonts)
 - [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills)
 - [vercel-labs/skills CLI](https://github.com/vercel-labs/skills)
 
-For the Chinese version of this article, see [Pi 插件推荐：12 个真正提升日常开发体验的扩展](/blog/posts/zh/2026-09-21-pi-essential-extensions).
+For the Chinese version of this article, see [Pi 插件推荐：11 个真正提升日常开发体验的扩展](/blog/posts/zh/2026-09-21-pi-essential-extensions).

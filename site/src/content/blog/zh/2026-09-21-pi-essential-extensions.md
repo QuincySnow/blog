@@ -1,6 +1,6 @@
 ---
-title: "Pi 插件推荐：12 个真正提升日常开发体验的扩展"
-description: "推荐 12 个实测可用的 Pi 扩展与技能：pi-web-access、pi-codegraph、ponytail、context-mode、pi-custom-system-prompt、pi-notify、pi-interactive-shell、pi-custom-provider-fix、pi-subagent、addyosmani/agent-skills、@juicesharp/rpiv-ask-user-question 与 pi-cc-extensions，附安装命令与适用场景"
+title: "Pi 插件推荐：11 个真正提升日常开发体验的扩展"
+description: "推荐 11 个实测可用的 Pi 扩展与技能：pi-web-access、pi-hermes-memory、ponytail、context-mode、pi-custom-system-prompt、pi-notify、pi-interactive-shell、pi-subagent、addyosmani/agent-skills、@juicesharp/rpiv-ask-user-question 与 pi-cc-extensions，附安装命令与适用场景"
 pubDatetime: 2026-10-06T00:00:00Z
 modDatetime: 2026-10-07T00:00:00Z
 draft: false
@@ -12,20 +12,19 @@ tags:
 lang: zh
 ---
 
-Pi 本身内置 MCP、Codemode、Subagent 调度等能力，但真正决定「用得顺不顺手」的，往往是几个扩展和技能包。这篇文章推荐 12 个我实际在用的，每个都给出安装命令、核心能力、适用场景，以及一些需要注意的地方。
+Pi 本身内置 MCP、Codemode、Subagent 调度等能力，但真正决定「用得顺不顺手」的，往往是几个扩展和技能包。这篇文章推荐 11 个我实际在用的，每个都给出安装命令、核心能力、适用场景，以及一些需要注意的地方。
 
 先给个速查表：
 
 | 包                                   | 一句话                                   | 类型              |
 | ------------------------------------ | ---------------------------------------- | ----------------- |
 | `pi-web-access`                      | 搜索 + 网页/视频内容提取，零配置         | extension         |
-| `@vndv/pi-codegraph`                 | 用 tree-sitter 图索引代替 grep/read 循环 | extension         |
+| `pi-hermes-memory`                   | 持久化记忆 + 会话搜索 + 技能管理         | extension + skill |
 | `ponytail`                           | 让 Agent 少写代码（实测 -54% LOC）       | extension + skill |
 | `context-mode`                       | 沙箱执行 + 知识库，省上下文窗口          | extension + skill |
 | `pi-custom-system-prompt`            | 从 Markdown 注入自定义系统提示词         | extension         |
 | `@pi-unipi/notify`                   | 任务完成后推送到手机/桌面                | extension + skill |
 | `pi-interactive-shell`               | 在 TUI 浮层里跑交互式 CLI 和子 Agent     | extension + skill |
-| `pi-custom-provider-fix`             | 向导式配置自定义 LLM 接口                | extension         |
 | `@mjakl/pi-subagent`                 | 委派给专职子 Agent                       | extension         |
 | `addyosmani/agent-skills`            | 25 个工程技能 + 9 个生命周期命令         | skills            |
 | `@juicesharp/rpiv-ask-user-question` | 让模型先问你，别替你猜                   | extension         |
@@ -63,27 +62,33 @@ API key 写在 `~/.pi/agent/web-search.json`：
 pi install npm:pi-web-access
 ```
 
-## 2. pi-codegraph：别再 grep 循环<span id="pi-codegraph"></span>
+## 2. pi-hermes-memory：跨会话持久记忆与历史搜索<span id="pi-hermes-memory"></span>
 
-[@vndv/pi-codegraph](https://pi.dev/packages/@vndv/pi-codegraph) 给 Pi 挂上 8 个结构化代码工具：
+每次退出终端或开启新会话，Agent 都会把之前的上下文忘得一干二净，偏好、踩过的坑、讨论过的架构决策每次都要重复交代。[chandra447/pi-hermes-memory](https://github.com/chandra447/pi-hermes-memory) 把 Hermes Agent 的两层记忆与技能进化系统完整移植到了 Pi 上。
+
+它给 Pi 挂载了 5 个核心工具：
 
 ```text
-codegraph_search    codegraph_node       codegraph_files
-codegraph_callers   codegraph_callees    codegraph_impact
-codegraph_explore   codegraph_status
+session_search   memory_search    skill_manage
+memory_add       memory_replace   memory_remove
 ```
 
-它用 tree-sitter 给项目建索引，然后回答「X 怎么走到 Y」这类问题，而不是让 Agent 一遍遍 grep + read。
+核心能力包括：
 
-注意它**依赖外部 CLI**，光装扩展没用：
+- **会话全文检索（Session Search）**：基于 SQLite FTS5，随时用自然语言检索过往所有会话记录（例如「上周关于认证方案讨论了什么？」）
+- **持久化分层记忆（Persistent Memory）**：支持全局记忆（`~/.pi/agent/pi-hermes-memory/`）与项目级记忆（`~/.pi/agent/projects-memory/<project>/`），分类管理用户画像（`user`）、项目规范（`project`）、通用事实（`memory`）以及踩坑教训（`failure`）
+- **程序化技能（Procedural Skills）**：Agent 在解决复杂问题后，能通过 `skill_manage` 把「操作规程」提炼并保存为 Pi 原生的 `SKILL.md`，变成后续随时可自动调用的技能
+- **后台自动学习与纠错捕获**：每 10 轮对话（或 15 次工具调用）在后台审视提炼记忆；检测到用户说「别这么做」或纠正指令时自动保存教训
+- **内置安全扫描（Secret Scanning）**：在持久化前拦截 API Key、Token、私钥等敏感凭证，避免泄露进记忆库
+- **记忆老化与自动整理（Auto-Consolidation）**：记忆带时间戳，空间占满时自动合并压缩，不会粗暴截断
+
+常用命令：`/memory-index-sessions`（一键索引历史会话）、`/memory-sync-markdown`（同步 Markdown 记忆到 SQLite）、`/memory-interview`（首次使用问答式生成偏好档案）。
 
 ```bash
-npm install -g @colbymchenry/codegraph   # 必须在 PATH 上
-cd /path/to/project && codegraph init -i # 每个项目都要初始化
-pi install npm:@vndv/pi-codegraph
+pi install npm:pi-hermes-memory
 ```
 
-要求 Node.js ≥ 22.19.0。纯 extension，不需要额外配 MCP server。
+要求 Node.js 22+。数据保存在本地 SQLite 和 Markdown 文件中，无需外部数据库或额外 MCP 服务。
 
 ## 3. ponytail：让它少写代码<span id="ponytail"></span>
 
@@ -196,19 +201,7 @@ pi install npm:@pi-unipi/notify
 pi install npm:pi-interactive-shell
 ```
 
-## 8. pi-custom-provider-fix：配置自定义 LLM 接口<span id="pi-custom-provider-fix"></span>
-
-想接第三方 OpenAI 兼容接口，手改 `models.json` 很痛苦。[youugiuhiuh/pi-custom-provider-fix](https://github.com/youugiuhiuh/pi-custom-provider-fix) 提供 `/provider-setup` 向导，支持接口类型选择、模型发现、模型元数据、兼容性覆盖、API Key 和 OAuth 流程。
-
-它是 [`d4rw1nz/pi-custom-provider`](https://github.com/d4rw1nz/pi-custom-provider) 的 fork，修的核心问题是**模型预设列表为空**。原因是预设选择器是同步的，而 models.dev 目录是异步拉取的——fork 加了缓存 + 预取（`prefetchModelCatalog`），并放宽了 `catalogApi` 过滤（models.dev 不声明 wire API，之前会把远程模型全部过滤掉）。改完之后较新的模型（比如 `deepseek-v4.1-flash` 及带区域后缀的变体）才会出现在预设里。
-
-```bash
-pi install git:github.com/youugiuhiuh/pi-custom-provider-fix
-```
-
-重启 Pi 后执行 `/provider-setup`。
-
-## 9. @mjakl/pi-subagent：委派给专职 Agent<span id="pi-subagent"></span>
+## 8. @mjakl/pi-subagent：委派给专职 Agent<span id="pi-subagent"></span>
 
 [@mjakl/pi-subagent](https://pi.dev/packages/@mjakl/pi-subagent) 让你像对主 Agent 说话一样派活：「review 这个 diff」「找一下认证在哪里实现的」，主 Agent 自己判断何时委派、把结果折回对话。
 
@@ -229,7 +222,7 @@ Agent 定义就是带 YAML frontmatter 的 Markdown：
 pi install npm:@mjakl/pi-subagent
 ```
 
-## 10. addyosmani/agent-skills：25 个工程技能<span id="agent-skills"></span>
+## 9. addyosmani/agent-skills：25 个工程技能<span id="agent-skills"></span>
 
 最后是唯一一个非 Pi 包的：[addyosmani/agent-skills](https://github.com/addyosmani/agent-skills)，把资深工程师的工作流编码成技能，覆盖开发全生命周期。
 
@@ -256,7 +249,7 @@ bunx skills add addyosmani/agent-skills --skill code-review-and-quality
 
 ⚠️ **单技能安装只复制 `skills/<name>/`，不含仓库根部的 `references/`**，所以引用共享 checklist 的路径会失效。要么整仓装，要么 clone 后手动补 `references/`。
 
-## 11. @juicesharp/rpiv-ask-user-question：让它先问你<span id="ask-user-question"></span>
+## 10. @juicesharp/rpiv-ask-user-question：让它先问你<span id="ask-user-question"></span>
 
 [@juicesharp/rpiv-ask-user-question](https://pi.dev/packages/@juicesharp/rpiv-ask-user-question) 只给 Pi 加一个工具——`ask_user_question`——但挡住的是最贵的一类损失：模型替你猜需求，猜错了你要花一小时撤销。
 
@@ -293,7 +286,7 @@ pi install npm:@juicesharp/rpiv-ask-user-question
 
 ⚠️ 两个坑：`Ctrl+]` 在 `]` 位于上档的键盘布局（如拉美布局）上按不出来，把 `collapseKey` 改成 `"alt+o"` 即可；另外若 Pi 运行期间有包管理器改动了磁盘上的模块，对话框会加载失败并退回成在聊天里提问——修好安装后重启，进程内无法恢复。
 
-## 12. pi-cc-extensions：Claude Code 风格界面与主题<span id="pi-cc-extensions"></span>
+## 11. pi-cc-extensions：Claude Code 风格界面与主题<span id="pi-cc-extensions"></span>
 
 [minuque/pi-cc-extensions](https://pi.dev/packages/pi-cc-extensions) 是这批里唯一同时声明 **extension + theme** 的包：它把 Pi 的 TUI 输出改成类 Claude Code 的样式，并随包附带两套主题 `cc-dark` / `cc-light`，装完用 `/theme` 直接切换。
 
@@ -359,13 +352,12 @@ macOS 解压到 `~/Library/Fonts/` 即可；想连正文字体一起换成打过
 
 ```text
 经常查资料        → pi-web-access
-大项目、找不到调用链 → pi-codegraph
+总记不住偏好/历史 → pi-hermes-memory
 嫌 Agent 过度设计  → ponytail
 上下文老是不够    → context-mode
 想固定人设/纪律    → pi-custom-system-prompt
 长任务怕错过      → @pi-unipi/notify
 要跑交互式 CLI    → pi-interactive-shell
-接第三方模型      → pi-custom-provider-fix
 想并行干活        → @mjakl/pi-subagent
 想要成套工程规范  → addyosmani/agent-skills
 模型老替你猜需求  → @juicesharp/rpiv-ask-user-question
@@ -378,13 +370,12 @@ macOS 解压到 `~/Library/Fonts/` 即可；想连正文字体一起换成打过
 
 ```bash
 pi install npm:pi-web-access
-pi install npm:@vndv/pi-codegraph
+pi install npm:pi-hermes-memory
 pi install npm:@dietrichgebert/ponytail
 pi install npm:context-mode
 pi install npm:pi-custom-system-prompt
 pi install npm:@pi-unipi/notify
 pi install npm:pi-interactive-shell
-pi install git:github.com/youugiuhiuh/pi-custom-provider-fix
 pi install npm:@mjakl/pi-subagent
 pi install npm:@juicesharp/rpiv-ask-user-question
 pi install npm:pi-cc-extensions
@@ -397,11 +388,12 @@ bunx skills add addyosmani/agent-skills
 
 Pi 官方的包页面都挂着同一句安全提示，我觉得值得原样转述：**Pi 包可以执行代码并影响 Agent 行为，安装第三方包前请先看源码。**
 
-上面这些里 `context-mode` 会接管工具路由、`pi-custom-provider-fix` 会写你的模型凭证、`pi-web-access` 会读你配的搜索 API key——都不是零风险的。公司设备或敏感仓库，建议先在容器里过一遍。
+上面这些里 `context-mode` 会接管工具路由、`pi-web-access` 会读你配的搜索 API key、`pi-hermes-memory` 会在本地 SQLite 和 Markdown 记录历史上下文与记忆（虽有 Secret Scanning 拦截敏感凭证）——都不是零风险的。公司设备或敏感仓库，建议先在容器里过一遍。
 
 ## 参考
 
 - [pi.dev/packages](https://pi.dev/packages)
+- [chandra447/pi-hermes-memory](https://github.com/chandra447/pi-hermes-memory)
 - [ryanoasis/nerd-fonts](https://github.com/ryanoasis/nerd-fonts)
 - [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills)
 - [vercel-labs/skills CLI](https://github.com/vercel-labs/skills)
