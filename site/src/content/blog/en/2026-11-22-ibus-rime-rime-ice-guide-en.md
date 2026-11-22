@@ -30,6 +30,11 @@ Fcitx5 is not bad — it just adds variables:
 | Wayland | Native | Works, but popup placement/focus can drift |
 | Setup surface | package → input source → dictionary | framework + modules + autostart + GTK/Qt modules + dictionary |
 | Best for | minimal fuss, GNOME, Flatpak users | KDE, heavy customization, skins |
+| Upstream | The Rime project itself (`rime/ibus-rime`) | The Fcitx team (`fcitx/fcitx5-rime`) |
+
+There is also a structural reason that gets overlooked: on the official [rime.im download page](https://rime.im/download/), `ibus-rime` is listed under Rime with no qualifier, while `fcitx5-rime` is explicitly tagged **“(third-party software)”** — “developed and maintained by the Fcitx team.” So `ibus-rime` shares an upstream with librime and the schema ecosystem: engine and frontend are coordinated in one place. `fcitx5-rime` is a separate frontend built on librime by another project, which means compatibility and bug ownership cross project boundaries.
+
+That is not a knock on `fcitx5-rime` — it is well maintained and it is the right answer on KDE. But on “who guarantees compatibility, where do I file the bug, which version do I follow,” a first-party frontend is one less hop. That is why this guide defaults to IBus.
 
 On GNOME, IBus is the default framework, so `ibus-rime` only needs to be added as an input source. On KDE, Fcitx5 is the native choice and staying with it is reasonable — the dictionary steps (2 and 3 below) are the same either way, only the user directory differs.
 

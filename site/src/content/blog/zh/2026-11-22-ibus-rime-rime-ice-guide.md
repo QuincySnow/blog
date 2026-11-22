@@ -30,6 +30,11 @@ lang: zh
 | Wayland | GNOME 原生支持 | 多数场景可用，个别弹窗定位/焦点会飘 |
 | 配置面 | 装包 → 加输入源 → 换词库 | 框架 + 模块 + 自启 + GTK/Qt 模块 + 词库 |
 | 适合谁 | 想少折腾、GNOME 用户、Flatpak 用户 | KDE 用户、需要大量自定义/皮肤/云拼音 |
+| 上游归属 | Rime 项目本身（`rime/ibus-rime`） | Fcitx 团队（`fcitx/fcitx5-rime`） |
+
+还有一条容易被忽略的硬理由：在 Rime 官方的[下载页](https://rime.im/download/)上，Linux 一栏里 `ibus-rime` 是直接列在 Rime 名下的前端，而 `fcitx5-rime` 后面明确跟着「（第三方軟件）」——「由 Fcitx 團隊開發和維護」。也就是说，`ibus-rime` 和 librime、方案生态属于同一个上游，引擎升级和前端适配在同一处协调；`fcitx5-rime` 是 Fcitx 团队拿 librime 做的另一个前端，兼容性与问题归属都要跨项目传递。
+
+这不等于 `fcitx5-rime` 质量差——它维护得不错，也是 KDE 上的正解。但在「谁来保证兼容、出问题去哪报、跟哪个版本走」这几个问题上，第一方前端确实少一层成本，这也是本文默认选 IBus 的原因。
 
 GNOME 桌面上 IBus 是默认输入法框架，`ibus-rime` 装完只需要在设置里把「Rime」加进输入源。KDE 上 Fcitx5 才是原生方案，你在 KDE 上坚持用 Fcitx5 完全合理——但即便如此，**词库的安装方法也是本文第 2、3 步**，只是用户目录换成 Fcitx5 的那个。
 
