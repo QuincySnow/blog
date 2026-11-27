@@ -20,10 +20,12 @@ tags: ["OpenCode", "AI 编程", "效率工具"]
 - [codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp)
 - [context-mode](https://github.com/mksglu/context-mode)
 - [Dynamic Context Pruning](https://github.com/Opencode-DCP/opencode-dynamic-context-pruning)
+- [agent-skills](https://github.com/addyosmani/agent-skills)：面向 AI 编码代理的工程技能集
+- [ponytail](https://github.com/DietrichGebert/ponytail)：让代理按“最懒资深工程师”的方式做最小改动
 
 ## 六层职责分工
 
-1. **Superpowers：流程层。** 用于把需求澄清、排查、测试和完成前验证变成明确步骤，避免直接跳到实现。
+1. **Superpowers：流程层。** 用于把需求澄清、排查、测试和完成前验证变成明确步骤，避免直接跳到实现；[agent-skills](https://github.com/addyosmani/agent-skills) 和 [ponytail](https://github.com/DietrichGebert/ponytail) 属于同一层，可按任务叠加使用。
 2. **CodeGraph：符号与调用路径层。** 为仓库建立本地代码图后，可以直接围绕符号、文件或问题探索关联代码。
 3. **codebase-memory-mcp：知识图谱层。** 通过 MCP 工具 `index_repository` 建立索引，再用 `search_graph` 找到函数、类、路由等结构化对象，并用 `trace_path` 追踪调用或数据路径。
 4. **context-mode：上下文处理层。** `ctx_execute`（配合 `file` 参数）让分析在沙箱中完成；`ctx_batch` 适合批量收集命令结果；`ctx_index` 用于预先索引文档或大文件，`ctx_search` 用于从已索引内容中检索需要的片段。

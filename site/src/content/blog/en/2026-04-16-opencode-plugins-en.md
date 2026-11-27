@@ -23,10 +23,12 @@ The projects covered here are:
 - [codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp)
 - [context-mode](https://github.com/mksglu/context-mode)
 - [Dynamic Context Pruning](https://github.com/Opencode-DCP/opencode-dynamic-context-pruning)
+- [agent-skills](https://github.com/addyosmani/agent-skills): production-grade engineering skills for AI coding agents
+- [ponytail](https://github.com/DietrichGebert/ponytail): makes the agent take the smallest change, lazy-senior-dev style
 
 ## Six Layers, Clear Responsibilities
 
-1. **Superpowers: workflow layer.** It turns requirements clarification, debugging, testing, and pre-completion verification into explicit steps instead of jumping straight to implementation.
+1. **Superpowers: workflow layer.** It turns requirements clarification, debugging, testing, and pre-completion verification into explicit steps instead of jumping straight to implementation. [agent-skills](https://github.com/addyosmani/agent-skills) and [ponytail](https://github.com/DietrichGebert/ponytail) sit in the same layer and can be layered on per task.
 2. **CodeGraph: symbols and call paths.** After building a local code graph for a repository, it provides source-plus-call-path exploration from a symbol, file, or question.
 3. **codebase-memory-mcp: knowledge-graph layer.** Use the MCP tool `index_repository` to create a persistent graph index, then use `search_graph` for structured objects such as functions, classes, and routes. `trace_path` follows calls or data paths, and graph queries support more targeted investigation.
 4. **context-mode: context-processing layer.** `ctx_execute` (with its `file` parameter) processes analysis in a sandbox; `ctx_batch` collects command results in batches; `ctx_index` makes docs or large files searchable in advance; and `ctx_search` retrieves only the indexed material needed next.
